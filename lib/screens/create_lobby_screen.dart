@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../services/lobby_service.dart';
+import '../providers/lobby_provider.dart';
 
 class CreateLobbyScreen extends StatefulWidget {
+  const CreateLobbyScreen({super.key});
+
   @override
   _CreateLobbyScreenState createState() => _CreateLobbyScreenState();
 }
@@ -19,7 +23,11 @@ class _CreateLobbyScreenState extends State<CreateLobbyScreen> {
     try {
       final lobby = await lobbyService.createLobby(_nameController.text);
       await lobbyProvider.initializeRealtime(lobby['id'] as String);
-      Navigator.pushReplacementNamed(context, '/active-lobby');
+      Navigator.pushReplacementNamed(
+        context, 
+        '/active-lobby',
+        arguments: lobby['id'] as String,
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error creating lobby: ${e.toString()}')),

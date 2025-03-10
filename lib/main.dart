@@ -8,6 +8,8 @@ import '../services/folder_service.dart';
 import 'package:provider/provider.dart';
 import '../services/lobby_service.dart';
 import '../providers/lobby_provider.dart';
+import 'screens/create_lobby_screen.dart';
+import 'screens/active_lobby_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,6 +65,10 @@ class MyApp extends StatelessWidget {
         '/': (context) => HomeScreen(
               authService: Provider.of<AuthService>(context),
               folderService: Provider.of<FolderService>(context),
+            ),
+        '/create-lobby': (context) => const CreateLobbyScreen(),
+        '/active-lobby': (context) => ActiveLobbyScreen(
+              lobbyId: ModalRoute.of(context)!.settings.arguments as String,
             ),
       },
     );

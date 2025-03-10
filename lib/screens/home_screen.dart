@@ -10,6 +10,7 @@ import './active_lobby_screen.dart';
 import '../models/lobby.dart';
 import '../components/error_widget_handler.dart';
 import '../components/empty_state_widget.dart';
+import './create_lobby_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final AuthService authService;
@@ -269,53 +270,61 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('MarkMe'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(icon: Icon(Icons.folder), text: 'Folders'),
-              Tab(icon: Icon(Icons.group), text: 'Lobbies'),
-            ],
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.info_outline),
-              onPressed: () => _showAboutDialog(context),
-              tooltip: 'About',
+      child: Builder(
+        builder: (context) {
+          final tabController = DefaultTabController.of(context);
+          return ListenableProvider.value(
+            value: tabController,
+            child: Scaffold(
+              appBar: AppBar(
+                title: const Text('MarkMe'),
+                bottom: const TabBar(
+                  tabs: [
+                    Tab(icon: Icon(Icons.folder), text: 'Folders'),
+                    Tab(icon: Icon(Icons.group), text: 'Lobbies'),
+                  ],
+                ),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.info_outline),
+                    onPressed: () => _showAboutDialog(context),
+                    tooltip: 'About',
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.person_outline),
+                    onPressed: () => _showUserDialog(context),
+                    tooltip: 'User Profile',
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.logout),
+                    onPressed: () async {
+                      try {
+                        await widget.authService.signOut();
+                        if (context.mounted) {
+                          Navigator.pushReplacementNamed(context, '/login');
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Logout failed: $e')),
+                          );
+                        }
+                      }
+                    },
+                    tooltip: 'Logout',
+                  ),
+                ],
+              ),
+              body: TabBarView(
+                children: [
+                  _buildFolderContent(),
+                  _buildLobbyContent(context),
+                ],
+              ),
+              floatingActionButton: _buildFAB(context),
             ),
-            IconButton(
-              icon: const Icon(Icons.person_outline),
-              onPressed: () => _showUserDialog(context),
-              tooltip: 'User Profile',
-            ),
-            IconButton(
-              icon: const Icon(Icons.logout),
-              onPressed: () async {
-                try {
-                  await widget.authService.signOut();
-                  if (context.mounted) {
-                    Navigator.pushReplacementNamed(context, '/login');
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Logout failed: $e')),
-                    );
-                  }
-                }
-              },
-              tooltip: 'Logout',
-            ),
-          ],
-        ),
-        body: TabBarView(
-          children: [
-            _buildFolderContent(),
-            _buildLobbyContent(context),
-          ],
-        ),
-        floatingActionButton: _buildFAB(context),
+          );
+        },
       ),
     );
   }
@@ -420,9 +429,25 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildFAB(BuildContext context) {
-    return FloatingActionButton(
-      onPressed: () => _showCreateFolderDialog(),
-      child: const Icon(Icons.add),
+    return Consumer<TabController>(
+      builder: (context, tabController, child) {
+        if (tabController.index == 0) { // Folders tab
+          return FloatingActionButton(
+            onPressed: _showCreateFolderDialog,
+            tooltip: 'Create Folder',
+            child: const Icon(Icons.create_new_folder),
+          );
+        } else { // Lobbies tab
+          return FloatingActionButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => CreateLobbyScreen()),
+            ),
+            tooltip: 'Create Lobby',
+            child: const Icon(Icons.add),
+          );
+        }
+      },
     );
   }
 
