@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:uuid/uuid.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/material.dart';
+import '../models/student.dart';
 
 class LobbyService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -81,5 +83,25 @@ class LobbyService {
         .eq('user_id', _supabase.auth.currentUser!.id);
 
     return (response as List).isNotEmpty;
+  }
+
+  Future<void> addAttendanceRecord(String lobbyId, Student student) async {
+    await _supabase.from('attendance_records').insert({
+      'lobby_id': lobbyId,
+      'student_id': student.id,
+      'student_name': student.name,
+      'marked_by': _supabase.auth.currentUser!.id,
+    });
+  }
+
+  Future<void> syncAttendance(String lobbyId, List<Student> students) async {
+    final attendanceRecords = students.map((student) => {
+      'lobby_id': lobbyId,
+      'student_id': student.id,
+      'student_name': student.name,
+      'marked_by': _supabase.auth.currentUser!.id,
+    }).toList();
+
+    await _supabase.from('attendance_records').insert(attendanceRecords);
   }
 } 

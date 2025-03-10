@@ -82,4 +82,18 @@ class LobbyProvider with ChangeNotifier {
       rethrow;
     }
   }
+
+  Future<void> fetchAttendanceRecords(String lobbyId) async {
+    try {
+      final response = await _supabase
+          .from('attendance_records')
+          .select('*, students(*)')
+          .eq('lobby_id', lobbyId);
+      _attendanceRecords = (response as List<dynamic>).cast<Map<String, dynamic>>();
+      notifyListeners();
+    } catch (e) {
+      print('Error fetching attendance: $e');
+      rethrow;
+    }
+  }
 } 
