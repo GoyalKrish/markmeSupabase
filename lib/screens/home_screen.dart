@@ -420,6 +420,8 @@ class _HomeScreenState extends State<HomeScreen> {
             message: 'No Active Lobbies Found',
             actionText: 'Create New Lobby',
             onAction: () => Navigator.pushNamed(context, '/create-lobby'),
+            secondaryActionText: 'Refresh',
+            onSecondaryAction: () => lobbyProvider.fetchActiveLobbies(),
           );
         }
 
