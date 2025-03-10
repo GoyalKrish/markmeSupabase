@@ -478,6 +478,9 @@ class _LobbyListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<AuthService>(context).currentUser;
+    final isHost = user?.id == lobby.hostId;
+
     return Card(
       child: ListTile(
         leading: const Icon(Icons.group),
@@ -488,7 +491,7 @@ class _LobbyListItem extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Code: ${lobby.entryCode}'),
+            if (isHost) Text('Code: ${lobby.entryCode}'),
             const SizedBox(height: 4),
             _buildLobbyStats(),
           ],
