@@ -27,16 +27,17 @@ class LobbyService {
   }
 
   // Join existing lobby
-  Future<void> joinLobby(String entryCode) async {
+  Future<void> joinLobby(String entryCode, String lobbyId) async {
     final lobby = await _supabase
         .from('lobbies')
         .select()
         .eq('entry_code', entryCode)
+        .eq('id', lobbyId)
         .eq('active', true)
         .single();
     
     if (lobby == null) throw Exception('Invalid entry code');
-    await _joinLobby(lobby['id'] as String);
+    await _joinLobby(lobbyId);
   }
 
   Future<void> _joinLobby(String lobbyId) async {
@@ -70,5 +71,15 @@ class LobbyService {
         .delete()
         .eq('lobby_id', lobbyId)
         .eq('user_id', _supabase.auth.currentUser!.id);
+  }
+
+  Future<bool> isUserMember(String lobbyId) async {
+    final response = await _supabase
+        .from('lobby_members')
+        .select()
+        .eq('lobby_id', lobbyId)
+        .eq('user_id', _supabase.auth.currentUser!.id);
+
+    return (response as List).isNotEmpty;
   }
 } 

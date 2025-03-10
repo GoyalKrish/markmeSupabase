@@ -500,12 +500,29 @@ class _LobbyListItem extends StatelessWidget {
           icon: const Icon(Icons.exit_to_app),
           onPressed: () => onLeaveLobby(lobby.id),
         ),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ActiveLobbyScreen(lobbyId: lobby.id),
-          ),
-        ),
+        onTap: () async {
+          final lobbyService = Provider.of<LobbyService>(context, listen: false);
+          final authService = Provider.of<AuthService>(context, listen: false);
+          final isHost = authService.currentUser?.id == lobby.hostId;
+
+          if (isHost) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => ActiveLobbyScreen(lobbyId: lobby.id)),
+            );
+            return;
+          }
+
+          final isMember = await lobbyService.isUserMember(lobby.id);
+          if (!isMember) {
+            await _showEntryCodeDialog(context, lobby.id, lobbyService);
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => ActiveLobbyScreen(lobbyId: lobby.id)),
+            );
+          }
+        },
       ),
     );
   }
@@ -533,6 +550,52 @@ class _LobbyListItem extends StatelessWidget {
         const SizedBox(width: 4),
         Text(value),
       ],
+    );
+  }
+
+  Future<void> _showEntryCodeDialog(BuildContext context, String lobbyId, LobbyService lobbyService) async {
+    final codeController = TextEditingController();
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Enter Lobby Code'),
+          content: TextField(
+            controller: codeController,
+            decoration: const InputDecoration(hintText: '6-digit code'),
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('Join'),
+              onPressed: () async {
+                try {
+                  await lobbyService.joinLobby(codeController.text, lobbyId);
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => ActiveLobbyScreen(lobbyId: lobbyId)),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: ${e.toString()}')),
+                    );
+                  }
+                }
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 } 
