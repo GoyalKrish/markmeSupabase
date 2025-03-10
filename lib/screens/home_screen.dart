@@ -7,6 +7,9 @@ import 'package:provider/provider.dart';
 import '../providers/lobby_provider.dart';
 import '../services/lobby_service.dart';
 import './active_lobby_screen.dart';
+import '../models/lobby.dart';
+import '../components/error_widget_handler.dart';
+import '../components/empty_state_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   final AuthService authService;
@@ -24,11 +27,14 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late Future<List<String>> _foldersFuture;
+  late Future<void> _lobbiesFuture;
 
   @override
   void initState() {
     super.initState();
     _refreshFolders();
+    final lobbyProvider = Provider.of<LobbyProvider>(context, listen: false);
+    _lobbiesFuture = lobbyProvider.fetchActiveLobbies();
   }
 
   void _refreshFolders() {
@@ -383,49 +389,32 @@ class _HomeScreenState extends State<HomeScreen> {
     final lobbyProvider = Provider.of<LobbyProvider>(context);
 
     return FutureBuilder(
-      future: lobbyProvider.fetchActiveLobbies(),
+      future: _lobbiesFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, size: 40, color: Colors.red),
-                const SizedBox(height: 16),
-                Text(
-                  'Failed to load lobbies',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                Text(
-                  snapshot.error.toString(),
-                  style: Theme.of(context).textTheme.bodySmall,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
+          print('Lobby fetch error: ${snapshot.error}');
+          return ErrorWidgetHandler(
+            error: snapshot.error!,
+            onRetry: () => Provider.of<LobbyProvider>(context, listen: false).fetchActiveLobbies(),
           );
         }
 
-        if (lobbyProvider.activeLobbies.isEmpty) {
-          return const Center(child: Text('No active lobbies found'));
+        final lobbies = lobbyProvider.activeLobbies;
+        
+        if (lobbies.isEmpty) {
+          return EmptyStateWidget(
+            icon: Icons.group_off,
+            message: 'No Active Lobbies Found',
+            actionText: 'Create New Lobby',
+            onAction: () => Navigator.pushNamed(context, '/create-lobby'),
+          );
         }
 
-        return RefreshIndicator(
-          onRefresh: () => lobbyProvider.fetchActiveLobbies(),
-          child: ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: lobbyProvider.activeLobbies.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 8),
-            itemBuilder: (context, index) {
-              final lobby = lobbyProvider.activeLobbies[index];
-              return _LobbyListItem(lobby: lobby);
-            },
-          ),
-        );
+        return _buildLobbyList(lobbies);
       },
     );
   }
@@ -458,12 +447,34 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
   }
+
+  Widget _buildLobbyList(List<Lobby> lobbies) {
+    return RefreshIndicator(
+      onRefresh: () => Provider.of<LobbyProvider>(context, listen: false).fetchActiveLobbies(),
+      child: ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: lobbies.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 8),
+        itemBuilder: (context, index) {
+          final lobby = lobbies[index];
+          return _LobbyListItem(
+            lobby: lobby,
+            onLeaveLobby: (lobbyId) => _leaveLobby(context, lobbyId),
+          );
+        },
+      ),
+    );
+  }
 }
 
 class _LobbyListItem extends StatelessWidget {
-  final Map<String, dynamic> lobby;
+  final Lobby lobby;
+  final Function(String) onLeaveLobby;
 
-  const _LobbyListItem({required this.lobby});
+  const _LobbyListItem({
+    required this.lobby,
+    required this.onLeaveLobby,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -471,25 +482,25 @@ class _LobbyListItem extends StatelessWidget {
       child: ListTile(
         leading: const Icon(Icons.group),
         title: Text(
-          lobby['name'] ?? 'Unnamed Lobby',
+          lobby.name,
           style: Theme.of(context).textTheme.titleMedium,
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Code: ${lobby['entry_code']}'),
+            Text('Code: ${lobby.entryCode}'),
             const SizedBox(height: 4),
             _buildLobbyStats(),
           ],
         ),
         trailing: IconButton(
           icon: const Icon(Icons.exit_to_app),
-          onPressed: () => _leaveLobby(context, lobby['id']),
+          onPressed: () => onLeaveLobby(lobby.id),
         ),
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => ActiveLobbyScreen(lobbyId: lobby['id']),
+            builder: (_) => ActiveLobbyScreen(lobbyId: lobby.id),
           ),
         ),
       ),
@@ -501,12 +512,12 @@ class _LobbyListItem extends StatelessWidget {
       children: [
         _buildStatItem(
           Icons.people,
-          '${lobby['lobby_members']?.length ?? 0}',
+          '${lobby.memberCount}',
         ),
         const SizedBox(width: 12),
         _buildStatItem(
           Icons.checklist,
-          '${lobby['attendance_records']?[0]['count'] ?? 0}',
+          '${lobby.attendanceCount}',
         ),
       ],
     );

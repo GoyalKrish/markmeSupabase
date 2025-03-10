@@ -2,12 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:realtime_client/realtime_client.dart';
 import 'package:supabase/supabase.dart';
+import '../models/lobby.dart';
 
 class LobbyProvider with ChangeNotifier {
   Map<String, dynamic>? _currentLobby;
   List<Map<String, dynamic>> _members = [];
   List<Map<String, dynamic>> _attendanceRecords = [];
-  List<Map<String, dynamic>> _activeLobbies = [];
+  List<Lobby> _activeLobbies = [];
 
   final SupabaseClient _supabase = Supabase.instance.client;
   RealtimeChannel? _lobbyChannel;
@@ -15,7 +16,7 @@ class LobbyProvider with ChangeNotifier {
   Map<String, dynamic>? get currentLobby => _currentLobby;
   List<Map<String, dynamic>> get members => _members;
   List<Map<String, dynamic>> get attendanceRecords => _attendanceRecords;
-  List<Map<String, dynamic>> get activeLobbies => _activeLobbies;
+  List<Lobby> get activeLobbies => _activeLobbies;
 
   Future<void> initializeRealtime(String lobbyId) async {
     _lobbyChannel = _supabase.channel('lobby-$lobbyId')
@@ -53,15 +54,32 @@ class LobbyProvider with ChangeNotifier {
   }
 
   Future<void> fetchActiveLobbies() async {
-    final response = await _supabase
-        .from('lobbies')
-        .select('*, lobby_members!inner(*), attendance_records(count)')
-        .eq('active', true)
-        .eq('lobby_members.user_id', _supabase.auth.currentUser!.id);
+    try {
+      final response = await _supabase
+          .from('lobbies')
+          .select('''
+            id,
+            name,
+            entry_code,
+            created_at,
+            host_id,
+            active,
+            lobby_members(count),
+            attendance_records(count)
+          ''')
+          .eq('active', true)
+          .order('created_at', ascending: false);
 
-    if (response is List<dynamic>) {
-      _activeLobbies = response.cast<Map<String, dynamic>>();
+      _activeLobbies = (response as List<dynamic>)
+          .map((lobby) => Lobby.fromJson(lobby as Map<String, dynamic>))
+          .toList();
+      
       notifyListeners();
+    } catch (e) {
+      print('Error fetching lobbies: $e');
+      _activeLobbies = [];
+      notifyListeners();
+      rethrow;
     }
   }
 } 
