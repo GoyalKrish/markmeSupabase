@@ -87,7 +87,14 @@ class LobbyProvider with ChangeNotifier {
     try {
       final response = await _supabase
           .from('attendance_records')
-          .select('*, students(*)')
+          .select('''
+            id,
+            lobby_id,
+            student_name,
+            student_system_id,
+            recorded_at,
+            device_id
+          ''')
           .eq('lobby_id', lobbyId);
       _attendanceRecords = (response as List<dynamic>).cast<Map<String, dynamic>>();
       notifyListeners();

@@ -38,11 +38,11 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
     return records
         .where((record) =>
             (record['student_name'] as String? ?? '').toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            (record['student_id'] as String? ?? '').toLowerCase().contains(_searchQuery.toLowerCase()))
+            (record['student_system_id'] as String? ?? '').toLowerCase().contains(_searchQuery.toLowerCase()))
         .map((record) => Student(
               name: record['student_name'] as String,
-              id: record['student_id'] as String,
-              timestamp: DateTime.parse(record['created_at'] as String),
+              id: record['student_system_id'] as String,
+              timestamp: DateTime.parse(record['recorded_at'] as String),
             ))
         .toList();
   }

@@ -88,19 +88,24 @@ class LobbyService {
   Future<void> addAttendanceRecord(String lobbyId, Student student) async {
     await _supabase.from('attendance_records').insert({
       'lobby_id': lobbyId,
-      'student_id': student.id,
+      'student_system_id': student.id,
       'student_name': student.name,
-      'marked_by': _supabase.auth.currentUser!.id,
+      'user_id': _supabase.auth.currentUser!.id,
+      'device_id': await _getDeviceId(),
     });
   }
 
   Future<void> syncAttendance(String lobbyId, List<Student> students) async {
-    final attendanceRecords = students.map((student) => {
-      'lobby_id': lobbyId,
-      'student_id': student.id,
-      'student_name': student.name,
-      'marked_by': _supabase.auth.currentUser!.id,
-    }).toList();
+    final attendanceRecords = await Future.wait(students.map((student) async {
+      return {
+        'lobby_id': lobbyId,
+        'student_system_id': student.id,
+        'student_name': student.name,
+        'user_id': _supabase.auth.currentUser!.id,
+        'device_id': await _getDeviceId(),
+        'synced_at': DateTime.now().toIso8601String(),
+      };
+    }));
 
     await _supabase.from('attendance_records').insert(attendanceRecords);
   }
