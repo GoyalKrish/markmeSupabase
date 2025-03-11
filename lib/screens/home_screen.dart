@@ -546,6 +546,18 @@ class _LobbyListItem extends StatelessWidget {
           final authService = Provider.of<AuthService>(context, listen: false);
           final isHost = authService.currentUser?.id == lobby.hostId;
 
+          if (isHost) {
+            if (context.mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ActiveLobbyScreen(lobbyId: lobby.id),
+                ),
+              );
+            }
+            return;
+          }
+
           final isMember = await lobbyService.isUserMember(lobby.id);
           if (!isMember) {
             await _showEntryCodeDialog(context, lobby.id, lobbyService);
