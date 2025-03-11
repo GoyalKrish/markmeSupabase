@@ -129,8 +129,12 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
                   context.read<LobbyProvider>().fetchAttendanceRecords(widget.lobbyId);
                   Navigator.pop(context);
                 } catch (e) {
+                  Navigator.pop(context); // Close dialog before showing error
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error adding student: $e')),
+                    SnackBar(
+                      content: Text(e.toString().replaceAll('Exception: ', '')),
+                      duration: const Duration(seconds: 2),
+                    ),
                   );
                 }
               }

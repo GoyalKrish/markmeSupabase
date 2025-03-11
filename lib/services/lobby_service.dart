@@ -86,6 +86,18 @@ class LobbyService {
   }
 
   Future<void> addAttendanceRecord(String lobbyId, Student student) async {
+    // Check for existing record first
+    final existing = await _supabase
+        .from('attendance_records')
+        .select()
+        .eq('lobby_id', lobbyId)
+        .eq('student_system_id', student.id)
+        .maybeSingle();
+
+    if (existing != null) {
+      throw Exception('Student with ID ${student.id} already exists in this lobby');
+    }
+
     await _supabase.from('attendance_records').insert({
       'lobby_id': lobbyId,
       'student_system_id': student.id,
