@@ -29,14 +29,14 @@ class Lobby {
       createdAt: DateTime.parse(json['created_at'] as String),
       memberCount: json['lobby_members'] == null 
           ? 0 
-          : (json['lobby_members'] is Map<String, dynamic>
-              ? (json['lobby_members'] as Map<String, dynamic>)['count'] as int? ?? 0
-              : (json['lobby_members'] as List).length),
+          : (json['lobby_members'] is List 
+              ? (json['lobby_members'][0] as Map<String, dynamic>)['count'] ?? 0
+              : 0),
       attendanceCount: json['attendance_records'] == null 
           ? 0 
-          : (json['attendance_records'] is Map<String, dynamic>
-              ? (json['attendance_records'] as Map<String, dynamic>)['count'] as int? ?? 0
-              : (json['attendance_records'] as List).length),
+          : (json['attendance_records'] is List
+              ? (json['attendance_records'][0] as Map<String, dynamic>)['count'] ?? 0
+              : 0),
     );
   }
 } 
