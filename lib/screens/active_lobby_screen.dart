@@ -7,6 +7,7 @@ import '../models/student.dart';
 import '../components/nfc_result_dialog.dart';
 import 'package:intl/intl.dart';
 import '../models/lobby.dart';
+import '../services/auth_service.dart';
 
 class ActiveLobbyScreen extends StatefulWidget {
   final String lobbyId;
@@ -36,14 +37,22 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
 
   List<Student> _filterStudents(List<Map<String, dynamic>> records) {
     return records
-        .where((record) =>
-            (record['student_name'] as String? ?? '').toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            (record['student_system_id'] as String? ?? '').toLowerCase().contains(_searchQuery.toLowerCase()))
-        .map((record) => Student(
-              name: record['student_name'] as String,
-              id: record['student_system_id'] as String,
-              timestamp: DateTime.parse(record['recorded_at'] as String),
-            ))
+        .where(
+          (record) =>
+              (record['student_name'] as String? ?? '').toLowerCase().contains(
+                _searchQuery.toLowerCase(),
+              ) ||
+              (record['student_system_id'] as String? ?? '')
+                  .toLowerCase()
+                  .contains(_searchQuery.toLowerCase()),
+        )
+        .map(
+          (record) => Student(
+            name: record['student_name'] as String,
+            id: record['student_system_id'] as String,
+            timestamp: DateTime.parse(record['recorded_at'] as String),
+          ),
+        )
         .toList();
   }
 
@@ -78,9 +87,9 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
         SnackBar(content: Text('Marked attendance for ${student.name}')),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error marking attendance: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error marking attendance: $e')));
     }
   }
 
@@ -92,57 +101,71 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
 
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Student Manually'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Student Name'),
-                validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Add Student Manually'),
+            content: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Student Name',
+                    ),
+                    validator:
+                        (value) => value?.isEmpty ?? true ? 'Required' : null,
+                  ),
+                  TextFormField(
+                    controller: idController,
+                    decoration: const InputDecoration(labelText: 'Student ID'),
+                    validator:
+                        (value) => value?.isEmpty ?? true ? 'Required' : null,
+                  ),
+                ],
               ),
-              TextFormField(
-                controller: idController,
-                decoration: const InputDecoration(labelText: 'Student ID'),
-                validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (formKey.currentState!.validate()) {
+                    final student = Student(
+                      name: nameController.text,
+                      id: idController.text,
+                    );
+                    try {
+                      await lobbyService.addAttendanceRecord(
+                        widget.lobbyId,
+                        student,
+                      );
+                      context.read<LobbyProvider>().fetchAttendanceRecords(
+                        widget.lobbyId,
+                      );
+                      Navigator.pop(context);
+                    } catch (e) {
+                      Navigator.pop(
+                        context,
+                      ); // Close dialog before showing error
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            e.toString().replaceAll('Exception: ', ''),
+                          ),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Add'),
               ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                final student = Student(
-                  name: nameController.text,
-                  id: idController.text,
-                );
-                try {
-                  await lobbyService.addAttendanceRecord(widget.lobbyId, student);
-                  context.read<LobbyProvider>().fetchAttendanceRecords(widget.lobbyId);
-                  Navigator.pop(context);
-                } catch (e) {
-                  Navigator.pop(context); // Close dialog before showing error
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(e.toString().replaceAll('Exception: ', '')),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                }
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -151,29 +174,28 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
     final lobbyProvider = Provider.of<LobbyProvider>(context);
     final currentLobby = lobbyProvider.activeLobbies.firstWhere(
       (lobby) => lobby.id == widget.lobbyId,
-      orElse: () => Lobby(
-        id: '',
-        name: '',
-        entryCode: '',
-        hostId: '',
-        active: false,
-        createdAt: DateTime.now(),
-        memberCount: 0,
-        attendanceCount: 0,
-      ),
+      orElse:
+          () => Lobby(
+            id: '',
+            name: '',
+            entryCode: '',
+            hostId: '',
+            active: false,
+            createdAt: DateTime.now(),
+            memberCount: 0,
+            attendanceCount: 0,
+          ),
     );
 
     return Scaffold(
       appBar: AppBar(
         title: Text(currentLobby.name),
         actions: [
-          Switch(
-            value: _nfcEnabled,
-            onChanged: _toggleNFCScanning,
-          ),
+          Switch(value: _nfcEnabled, onChanged: _toggleNFCScanning),
           IconButton(
             icon: const Icon(Icons.sync),
-            onPressed: () => lobbyProvider.fetchAttendanceRecords(widget.lobbyId),
+            onPressed:
+                () => lobbyProvider.fetchAttendanceRecords(widget.lobbyId),
             tooltip: 'Sync Attendance',
           ),
         ],
@@ -195,6 +217,42 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
 
           return Column(
             children: [
+              if (currentLobby.hostId ==
+                  Provider.of<AuthService>(context).currentUser?.id)
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Host Controls',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _buildStatItem(
+                                Icons.group,
+                                '${currentLobby.memberCount}',
+                              ),
+                              _buildStatItem(
+                                Icons.checklist,
+                                '${currentLobby.attendanceCount}',
+                              ),
+                              _buildStatItem(
+                                Icons.lock,
+                                currentLobby.entryCode,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: TextField(
@@ -204,27 +262,34 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.info_outline),
-                      onPressed: () => showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Lobby Info'),
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Host ID: ${currentLobby.hostId}'),
-                              Text('Entry Code: ${currentLobby.entryCode}'),
-                              Text('Created: ${DateFormat.yMd().add_jm().format(currentLobby.createdAt)}'),
-                            ],
+                      onPressed:
+                          () => showDialog(
+                            context: context,
+                            builder:
+                                (context) => AlertDialog(
+                                  title: const Text('Lobby Info'),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Host ID: ${currentLobby.hostId}'),
+                                      Text(
+                                        'Entry Code: ${currentLobby.entryCode}',
+                                      ),
+                                      Text(
+                                        'Created: ${DateFormat.yMd().add_jm().format(currentLobby.createdAt)}',
+                                      ),
+                                    ],
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Close'),
+                                    ),
+                                  ],
+                                ),
                           ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('Close'),
-                            ),
-                          ],
-                        ),
-                      ),
                     ),
                   ),
                   onChanged: (value) => setState(() => _searchQuery = value),
@@ -276,4 +341,14 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
     _nfcService.stopScanning();
     super.dispose();
   }
-} 
+
+  Widget _buildStatItem(IconData icon, String value) {
+    return Column(
+      children: [
+        Icon(icon, size: 28),
+        const SizedBox(height: 4),
+        Text(value, style: Theme.of(context).textTheme.titleMedium),
+      ],
+    );
+  }
+}

@@ -13,7 +13,7 @@ import 'screens/active_lobby_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   await dotenv.load(fileName: ".env");
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
@@ -40,6 +40,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'MarkMe',
       theme: ThemeData(
         // This is the theme of your application.
@@ -62,12 +63,14 @@ class MyApp extends StatelessWidget {
       initialRoute: '/login',
       routes: {
         '/login': (context) => const LoginScreen(),
-        '/': (context) => HomeScreen(
+        '/':
+            (context) => HomeScreen(
               authService: Provider.of<AuthService>(context),
               folderService: Provider.of<FolderService>(context),
             ),
         '/create-lobby': (context) => const CreateLobbyScreen(),
-        '/active-lobby': (context) => ActiveLobbyScreen(
+        '/active-lobby':
+            (context) => ActiveLobbyScreen(
               lobbyId: ModalRoute.of(context)!.settings.arguments as String,
             ),
       },

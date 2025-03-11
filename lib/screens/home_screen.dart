@@ -50,83 +50,90 @@ class _HomeScreenState extends State<HomeScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Create New Folder'),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: folderNameController,
-            decoration: const InputDecoration(labelText: 'Folder Name'),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter a folder name';
-              }
-              return null;
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                final folderName = folderNameController.text;
-                
-                // Check if folder already exists
-                final exists = await widget.folderService.folderExists(folderName);
-                if (exists) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('A folder with this name already exists'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Create New Folder'),
+            content: Form(
+              key: formKey,
+              child: TextFormField(
+                controller: folderNameController,
+                decoration: const InputDecoration(labelText: 'Folder Name'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a folder name';
                   }
-                  return;
-                }
+                  return null;
+                },
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (formKey.currentState!.validate()) {
+                    final folderName = folderNameController.text;
 
-                await widget.folderService.addFolder(folderName);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  _refreshFolders();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => FolderScreen(
-                        folderName: folderName,
-                        folderService: widget.folderService,
-                      ),
-                    ),
-                  );
-                }
-              }
-            },
-            child: const Text('Create'),
+                    // Check if folder already exists
+                    final exists = await widget.folderService.folderExists(
+                      folderName,
+                    );
+                    if (exists) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'A folder with this name already exists',
+                            ),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                      return;
+                    }
+
+                    await widget.folderService.addFolder(folderName);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      _refreshFolders();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => FolderScreen(
+                                folderName: folderName,
+                                folderService: widget.folderService,
+                              ),
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Create'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
   void _showAboutDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('About MarkMe'),
-        content: const Text(
-          'MarkMe is an attendance taking app designed to help you manage class attendance easily .\n\nVersion: 1.0.0\ndeveloped by: Krish Goyal & Aditya Pandey\nContact us at : in.markme@gmail.com',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('About MarkMe'),
+            content: const Text(
+              'MarkMe is an attendance taking app designed to help you manage class attendance easily .\n\nVersion: 1.0.0\ndeveloped by: Krish Goyal & Aditya Pandey\nContact us at : in.markme@gmail.com',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -134,62 +141,60 @@ class _HomeScreenState extends State<HomeScreen> {
     final user = widget.authService.currentUser;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('User Profile'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Email: ${user?.email ?? 'N/A'}'),
-            const SizedBox(height: 8),
-            Text(
-              'Registered: ${user?.createdAt != null ? 
-                DateFormat('yyyy-MM-dd – HH:mm').format(
-                  DateTime.parse(user!.createdAt!).toLocal()
-                ) : 
-                'N/A'}'
+      builder:
+          (context) => AlertDialog(
+            title: const Text('User Profile'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Email: ${user?.email ?? 'N/A'}'),
+                const SizedBox(height: 8),
+                Text(
+                  'Registered: ${user?.createdAt != null ? DateFormat('yyyy-MM-dd – HH:mm').format(DateTime.parse(user!.createdAt!).toLocal()) : 'N/A'}',
+                ),
+                const SizedBox(height: 8),
+                Text('User ID: ${user?.id ?? 'N/A'}'),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text('User ID: ${user?.id ?? 'N/A'}'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
   void _showFolderContextMenu(BuildContext context, String folder) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(folder),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.edit),
-              title: const Text('Edit'),
-              onTap: () {
-                Navigator.pop(context);
-                _showEditFolderDialog(context, folder);
-              },
+      builder:
+          (context) => AlertDialog(
+            title: Text(folder),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.edit),
+                  title: const Text('Edit'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showEditFolderDialog(context, folder);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.delete),
+                  title: const Text('Delete'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showDeleteConfirmationDialog(context, folder);
+                  },
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.delete),
-              title: const Text('Delete'),
-              onTap: () {
-                Navigator.pop(context);
-                _showDeleteConfirmationDialog(context, folder);
-              },
-            ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -199,70 +204,70 @@ class _HomeScreenState extends State<HomeScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Folder'),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: folderNameController,
-            decoration: const InputDecoration(labelText: 'Folder Name'),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter a folder name';
-              }
-              return null;
-            },
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Edit Folder'),
+            content: Form(
+              key: formKey,
+              child: TextFormField(
+                controller: folderNameController,
+                decoration: const InputDecoration(labelText: 'Folder Name'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a folder name';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (formKey.currentState!.validate()) {
+                    final newName = folderNameController.text;
+                    await widget.folderService.updateFolder(oldName, newName);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      _refreshFolders();
+                    }
+                  }
+                },
+                child: const Text('Save'),
+              ),
+            ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                final newName = folderNameController.text;
-                await widget.folderService.updateFolder(oldName, newName);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  _refreshFolders();
-                }
-              }
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
     );
   }
 
   void _showDeleteConfirmationDialog(BuildContext context, String folder) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Folder'),
-        content: Text('Are you sure you want to delete "$folder"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete Folder'),
+            content: Text('Are you sure you want to delete "$folder"?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  await widget.folderService.deleteFolder(folder);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    _refreshFolders();
+                  }
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () async {
-              await widget.folderService.deleteFolder(folder);
-              if (context.mounted) {
-                Navigator.pop(context);
-                _refreshFolders();
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -316,10 +321,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               body: TabBarView(
-                children: [
-                  _buildFolderContent(),
-                  _buildLobbyContent(context),
-                ],
+                children: [_buildFolderContent(), _buildLobbyContent(context)],
               ),
               floatingActionButton: _buildFAB(context),
             ),
@@ -352,13 +354,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                
+
                 if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
 
                 final folders = snapshot.data ?? [];
-                
+
                 if (folders.isEmpty) {
                   return const Center(child: Text('No folders yet'));
                 }
@@ -374,14 +376,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => FolderScreen(
-                                folderName: folder,
-                                folderService: widget.folderService,
-                              ),
+                              builder:
+                                  (context) => FolderScreen(
+                                    folderName: folder,
+                                    folderService: widget.folderService,
+                                  ),
                             ),
                           );
                         },
-                        onLongPress: () => _showFolderContextMenu(context, folder),
+                        onLongPress:
+                            () => _showFolderContextMenu(context, folder),
                       ),
                     );
                   },
@@ -408,12 +412,17 @@ class _HomeScreenState extends State<HomeScreen> {
           print('Lobby fetch error: ${snapshot.error}');
           return ErrorWidgetHandler(
             error: snapshot.error!,
-            onRetry: () => Provider.of<LobbyProvider>(context, listen: false).fetchActiveLobbies(),
+            onRetry:
+                () =>
+                    Provider.of<LobbyProvider>(
+                      context,
+                      listen: false,
+                    ).fetchActiveLobbies(),
           );
         }
 
         final lobbies = lobbyProvider.activeLobbies;
-        
+
         if (lobbies.isEmpty) {
           return EmptyStateWidget(
             icon: Icons.group_off,
@@ -433,18 +442,21 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildFAB(BuildContext context) {
     return Consumer<TabController>(
       builder: (context, tabController, child) {
-        if (tabController.index == 0) { // Folders tab
+        if (tabController.index == 0) {
+          // Folders tab
           return FloatingActionButton(
             onPressed: _showCreateFolderDialog,
             tooltip: 'Create Folder',
             child: const Icon(Icons.create_new_folder),
           );
-        } else { // Lobbies tab
+        } else {
+          // Lobbies tab
           return FloatingActionButton(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => CreateLobbyScreen()),
-            ),
+            onPressed:
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => CreateLobbyScreen()),
+                ),
             tooltip: 'Create Lobby',
             child: const Icon(Icons.add),
           );
@@ -457,10 +469,10 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final lobbyService = Provider.of<LobbyService>(context, listen: false);
       final lobbyProvider = Provider.of<LobbyProvider>(context, listen: false);
-      
+
       await lobbyService.leaveLobby(lobbyId);
       await lobbyProvider.fetchActiveLobbies();
-      
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Left lobby successfully')),
@@ -468,16 +480,21 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error leaving lobby: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error leaving lobby: $e')));
       }
     }
   }
 
   Widget _buildLobbyList(List<Lobby> lobbies) {
     return RefreshIndicator(
-      onRefresh: () => Provider.of<LobbyProvider>(context, listen: false).fetchActiveLobbies(),
+      onRefresh:
+          () =>
+              Provider.of<LobbyProvider>(
+                context,
+                listen: false,
+              ).fetchActiveLobbies(),
       child: ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: lobbies.length,
@@ -498,10 +515,7 @@ class _LobbyListItem extends StatelessWidget {
   final Lobby lobby;
   final Function(String) onLeaveLobby;
 
-  const _LobbyListItem({
-    required this.lobby,
-    required this.onLeaveLobby,
-  });
+  const _LobbyListItem({required this.lobby, required this.onLeaveLobby});
 
   @override
   Widget build(BuildContext context) {
@@ -511,10 +525,7 @@ class _LobbyListItem extends StatelessWidget {
     return Card(
       child: ListTile(
         leading: const Icon(Icons.group),
-        title: Text(
-          lobby.name,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+        title: Text(lobby.name, style: Theme.of(context).textTheme.titleMedium),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -528,25 +539,24 @@ class _LobbyListItem extends StatelessWidget {
           onPressed: () => onLeaveLobby(lobby.id),
         ),
         onTap: () async {
-          final lobbyService = Provider.of<LobbyService>(context, listen: false);
+          final lobbyService = Provider.of<LobbyService>(
+            context,
+            listen: false,
+          );
           final authService = Provider.of<AuthService>(context, listen: false);
           final isHost = authService.currentUser?.id == lobby.hostId;
-
-          if (isHost) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => ActiveLobbyScreen(lobbyId: lobby.id)),
-            );
-            return;
-          }
 
           final isMember = await lobbyService.isUserMember(lobby.id);
           if (!isMember) {
             await _showEntryCodeDialog(context, lobby.id, lobbyService);
-          } else {
+          }
+
+          if (context.mounted) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => ActiveLobbyScreen(lobbyId: lobby.id)),
+              MaterialPageRoute(
+                builder: (_) => ActiveLobbyScreen(lobbyId: lobby.id),
+              ),
             );
           }
         },
@@ -557,30 +567,24 @@ class _LobbyListItem extends StatelessWidget {
   Widget _buildLobbyStats() {
     return Row(
       children: [
-        _buildStatItem(
-          Icons.people,
-          '${lobby.memberCount}',
-        ),
+        _buildStatItem(Icons.people, '${lobby.memberCount}'),
         const SizedBox(width: 12),
-        _buildStatItem(
-          Icons.checklist,
-          '${lobby.attendanceCount}',
-        ),
+        _buildStatItem(Icons.checklist, '${lobby.attendanceCount}'),
       ],
     );
   }
 
   Widget _buildStatItem(IconData icon, String value) {
     return Row(
-      children: [
-        Icon(icon, size: 16),
-        const SizedBox(width: 4),
-        Text(value),
-      ],
+      children: [Icon(icon, size: 16), const SizedBox(width: 4), Text(value)],
     );
   }
 
-  Future<void> _showEntryCodeDialog(BuildContext context, String lobbyId, LobbyService lobbyService) async {
+  Future<void> _showEntryCodeDialog(
+    BuildContext context,
+    String lobbyId,
+    LobbyService lobbyService,
+  ) async {
     final codeController = TextEditingController();
     return showDialog<void>(
       context: context,
@@ -608,7 +612,9 @@ class _LobbyListItem extends StatelessWidget {
                     Navigator.of(context).pop();
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => ActiveLobbyScreen(lobbyId: lobbyId)),
+                      MaterialPageRoute(
+                        builder: (_) => ActiveLobbyScreen(lobbyId: lobbyId),
+                      ),
                     );
                   }
                 } catch (e) {
@@ -625,4 +631,4 @@ class _LobbyListItem extends StatelessWidget {
       },
     );
   }
-} 
+}
