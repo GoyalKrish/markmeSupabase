@@ -553,11 +553,13 @@ class _LobbyListItem extends StatelessWidget {
           final isHost = authService.currentUser?.id == lobby.hostId;
 
           final isMember = await lobbyService.isUserMember(lobby.id);
+          bool shouldNavigate = isMember;
+          
           if (!isMember) {
-            await _showEntryCodeDialog(context, lobby.id, lobbyService);
+            shouldNavigate = await _showEntryCodeDialog(context, lobby.id, lobbyService);
           }
 
-          if (context.mounted) {
+          if (shouldNavigate && context.mounted) {
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -586,13 +588,15 @@ class _LobbyListItem extends StatelessWidget {
     );
   }
 
-  Future<void> _showEntryCodeDialog(
+  Future<bool> _showEntryCodeDialog(
     BuildContext context,
     String lobbyId,
     LobbyService lobbyService,
   ) async {
     final codeController = TextEditingController();
-    return showDialog<void>(
+    bool joinSuccessful = false;
+    
+    await showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
@@ -614,14 +618,9 @@ class _LobbyListItem extends StatelessWidget {
               onPressed: () async {
                 try {
                   await lobbyService.joinLobby(codeController.text, lobbyId);
+                  joinSuccessful = true;
                   if (context.mounted) {
                     Navigator.of(context).pop();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ActiveLobbyScreen(lobbyId: lobbyId),
-                      ),
-                    );
                   }
                 } catch (e) {
                   if (context.mounted) {
@@ -636,5 +635,7 @@ class _LobbyListItem extends StatelessWidget {
         );
       },
     );
+    
+    return joinSuccessful;
   }
 }
