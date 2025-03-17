@@ -3,6 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
+  // Add stream to listen for auth changes
+  Stream<AuthState> get authStateChanges => _supabase.auth.onAuthStateChange;
+
   Future<void> signUpWithEmailAndPassword(String email, String password) async {
     await _supabase.auth.signUp(email: email, password: password);
   }

@@ -36,6 +36,12 @@ class _HomeScreenState extends State<HomeScreen> {
     _refreshFolders();
     final lobbyProvider = Provider.of<LobbyProvider>(context, listen: false);
     _lobbiesFuture = lobbyProvider.fetchActiveLobbies();
+    
+    if (widget.authService.currentUser == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(context, '/login');
+      });
+    }
   }
 
   void _refreshFolders() {
