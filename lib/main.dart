@@ -20,10 +20,15 @@ void main() async {
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
 
+  final authService = AuthService();
+  if (authService.currentUser != null && await authService.isUserBanned()) {
+    await authService.signOut();
+  }
+
   runApp(
     MultiProvider(
       providers: [
-        Provider(create: (_) => AuthService()),
+        Provider(create: (_) => authService),
         Provider(create: (_) => FolderService()),
         Provider(create: (_) => LobbyService()),
         ChangeNotifierProvider(create: (_) => LobbyProvider()),
@@ -40,6 +45,20 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
     
+    authService.authStateChanges.listen((event) async {
+      final session = event.session;
+      if (session != null && await authService.isUserBanned()) {
+        await authService.signOut();
+        if (context.mounted) {
+          Navigator.pushNamedAndRemoveUntil(
+            context, 
+            '/login', 
+            (route) => false
+          );
+        }
+      }
+    });
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'MarkMe',

@@ -41,14 +41,17 @@ class _LoginScreenState extends State<LoginScreen> {
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
-      // Navigate to home screen on success
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/');
       }
     } on AuthException catch (error) {
       if (mounted) {
+        String message = error.message;
+        if (message.contains('banned')) {
+          message = 'Account suspended. Please contact support.';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message)),
+          SnackBar(content: Text(message)),
         );
       }
     } finally {
