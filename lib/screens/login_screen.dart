@@ -290,58 +290,66 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               const SizedBox(height: 32),
                               
                               // Sign In Button
-                              SizedBox(
+                              Container(
                                 width: double.infinity,
                                 height: 56,
-                                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _submitForm,
-                                  style: ElevatedButton.styleFrom(
-                                    foregroundColor: MarkMeTheme.darkBackground,
-                                    backgroundColor: Colors.transparent,
-                                    disabledForegroundColor: MarkMeTheme.darkBackground.withOpacity(0.6),
-                                    disabledBackgroundColor: Colors.transparent,
-                                    elevation: 0,
-                                    padding: EdgeInsets.zero,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: MarkMeTheme.primaryYellow.withOpacity(0.25),
+                                      blurRadius: 12,
+                                      spreadRadius: 0,
+                                      offset: const Offset(0, 4),
                                     ),
-                                  ),
-                                  child: Ink(
-                                    decoration: BoxDecoration(
-                                      gradient: _isLoading 
-                                          ? LinearGradient(
-                                              colors: [
-                                                MarkMeTheme.primaryYellow.withOpacity(0.7),
-                                                MarkMeTheme.primaryYellow.withOpacity(0.5),
-                                              ],
-                                              begin: Alignment.centerLeft,
-                                              end: Alignment.centerRight,
-                                            )
-                                          : MarkMeTheme.buttonGradient,
-                                      borderRadius: BorderRadius.circular(16),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: MarkMeTheme.primaryYellow.withOpacity(0.3),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 4),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: _isLoading ? null : _submitForm,
+                                      splashColor: Colors.white24,
+                                      highlightColor: Colors.white10,
+                                      child: Ink(
+                                        decoration: BoxDecoration(
+                                          gradient: _isLoading 
+                                              ? LinearGradient(
+                                                  colors: [
+                                                    MarkMeTheme.primaryYellow.withOpacity(0.7),
+                                                    MarkMeTheme.primaryYellow.withOpacity(0.5),
+                                                  ],
+                                                  begin: Alignment.topCenter,
+                                                  end: Alignment.bottomCenter,
+                                                )
+                                              : LinearGradient(
+                                                  colors: [
+                                                    const Color(0xFFFFB800),
+                                                    const Color(0xFFFFA000),
+                                                  ],
+                                                  begin: Alignment.topCenter,
+                                                  end: Alignment.bottomCenter,
+                                                ),
                                         ),
-                                      ],
-                                    ),
-                                    child: Container(
-                                      alignment: Alignment.center,
-                  child: _isLoading 
-                                          ? const SizedBox(
-                                              width: 24,
-                                              height: 24,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2.5,
-                                                valueColor: AlwaysStoppedAnimation<Color>(MarkMeTheme.darkBackground),
-                                              ),
-                                            )
-                                          : Text(
-                                              'Sign In',
-                                              style: MarkMeTheme.buttonTextStyle,
-                                            ),
+                                        child: Center(
+                                          child: _isLoading 
+                                              ? const SizedBox(
+                                                  width: 24,
+                                                  height: 24,
+                                                  child: CircularProgressIndicator(
+                                                    strokeWidth: 2.5,
+                                                    valueColor: AlwaysStoppedAnimation<Color>(MarkMeTheme.darkBackground),
+                                                  ),
+                                                )
+                                              : Text(
+                                                  'Sign In',
+                                                  style: MarkMeTheme.buttonTextStyle.copyWith(
+                                                    letterSpacing: 0.6,
+                                                  ),
+                                                ),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
