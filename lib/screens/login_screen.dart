@@ -133,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             gradient: MarkMeTheme.backgroundGradient,
             boxShadow: [
               BoxShadow(
-                color: MarkMeTheme.primaryYellow.withOpacity(0.05),
+                color: MarkMeTheme.primaryYellow.withOpacity(0.09),
                 blurRadius: 200,
                 spreadRadius: 100,
                 offset: const Offset(0, -100),
@@ -162,12 +162,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       children: [
                         // Logo and Branding
                         Align(
-                          alignment: Alignment.centerLeft,
+                          alignment: Alignment.topCenter,
                           child: Hero(
                             tag: 'markme_logo',
                             child: const MarkMeLogo(
-                              size: 80,
-                              variant: LogoVariant.full,
+                              size: 150,
+                              variant: LogoVariant.icon,
                             ),
                           ),
                         ),
@@ -175,13 +175,18 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         
                         // Welcome Header
                         Text(
-                          'Welcome to MarkMe!',
+                          'Welcome to MarkMe',
                           style: MarkMeTheme.headingStyle,
+                          textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'The Next Generation of Attendance Tracking',
-                          style: MarkMeTheme.subheadingStyle,
+                          style: MarkMeTheme.subheadingStyle.copyWith(
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.center,
+                          softWrap: false,
                         ),
                         const SizedBox(height: 40),
                         
@@ -249,7 +254,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               
                               // Remember Me and Forgot Password
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
                                   Row(
                                     children: [
@@ -279,29 +284,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                         style: MarkMeTheme.labelStyle,
                                       ),
                                     ],
-                                  ),
-                                  
-                                  TextButton(
-                                    onPressed: () {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Forgot password functionality coming soon!'),
-                                          behavior: SnackBarBehavior.floating,
-                                        ),
-                                      );
-                                    },
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: MarkMeTheme.primaryYellow,
-                                      padding: EdgeInsets.zero,
-                                      minimumSize: const Size(0, 0),
-                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                    ),
-                                    child: Text(
-                                      'Forgot Password?',
-                                      style: MarkMeTheme.labelStyle.copyWith(
-                                        color: MarkMeTheme.primaryYellow,
-                                      ),
-                                    ),
                                   ),
                                 ],
                               ),
