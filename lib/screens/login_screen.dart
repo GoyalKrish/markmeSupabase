@@ -158,11 +158,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         // Logo and Branding
                         Align(
-                          alignment: Alignment.topCenter,
+                          alignment: Alignment.center,
                           child: Hero(
                             tag: 'markme_logo',
                             child: const MarkMeLogo(
@@ -174,19 +174,25 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         const SizedBox(height: 32),
                         
                         // Welcome Header
-                        Text(
-                          'Welcome to MarkMe',
-                          style: MarkMeTheme.headingStyle,
-                          textAlign: TextAlign.center,
+                        Container(
+                          width: double.infinity,
+                          child: Text(
+                            'Welcome to MarkMe',
+                            style: MarkMeTheme.headingStyle,
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          'The Next Generation of Attendance Tracking',
-                          style: MarkMeTheme.subheadingStyle.copyWith(
-                            fontSize: 14,
+                        Container(
+                          width: double.infinity,
+                          child: Text(
+                            'The Next Generation of Attendance Tracking',
+                            style: MarkMeTheme.subheadingStyle.copyWith(
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                            softWrap: false,
                           ),
-                          textAlign: TextAlign.center,
-                          softWrap: false,
                         ),
                         const SizedBox(height: 40),
                         
