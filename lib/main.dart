@@ -10,6 +10,7 @@ import '../services/lobby_service.dart';
 import '../providers/lobby_provider.dart';
 import 'screens/create_lobby_screen.dart';
 import 'screens/active_lobby_screen.dart';
+import 'theme/markme_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,7 +64,23 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'MarkMe',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.dark(
+          primary: MarkMeTheme.primaryYellow,
+          secondary: MarkMeTheme.primaryYellow,
+          surface: MarkMeTheme.surfaceDark,
+          background: MarkMeTheme.darkBackground,
+        ),
+        scaffoldBackgroundColor: MarkMeTheme.darkBackground,
+        appBarTheme: AppBarTheme(
+          backgroundColor: MarkMeTheme.surfaceDark,
+          foregroundColor: MarkMeTheme.primaryWhite,
+          elevation: 0,
+        ),
+        textTheme: TextTheme(
+          headlineLarge: MarkMeTheme.headingStyle,
+          headlineMedium: MarkMeTheme.subheadingStyle,
+          bodyLarge: MarkMeTheme.labelStyle,
+        ),
       ),
       initialRoute: authService.currentUser != null ? '/' : '/login',
       routes: {

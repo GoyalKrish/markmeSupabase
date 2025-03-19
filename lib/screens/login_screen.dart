@@ -131,15 +131,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         body: Container(
           decoration: BoxDecoration(
             gradient: MarkMeTheme.backgroundGradient,
-            image: DecorationImage(
-              image: const AssetImage('assets/images/login_background_pattern.png'),
-              fit: BoxFit.cover,
-              opacity: 0.05,
-              colorFilter: ColorFilter.mode(
-                MarkMeTheme.primaryYellow.withOpacity(0.1),
-                BlendMode.overlay,
+            boxShadow: [
+              BoxShadow(
+                color: MarkMeTheme.primaryYellow.withOpacity(0.05),
+                blurRadius: 200,
+                spreadRadius: 100,
+                offset: const Offset(0, -100),
               ),
-            ),
+            ],
           ),
           child: SafeArea(
             child: Center(
