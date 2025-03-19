@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
+import '../components/markme_logo.dart';
+import '../theme/markme_theme.dart';
 import 'dart:ui';
 
 class LoginScreen extends StatefulWidget {
@@ -24,13 +26,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   late Animation<Offset> _slideAnimation;
 
   late final AuthService _authService;
-  
+
   @override
   void initState() {
     super.initState();
     _authService = AuthService();
     
-    // Initialize animations
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 750),
@@ -52,7 +53,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     
     _animationController.forward();
     
-    // Check if user is already logged in and redirect to home if they are
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_authService.currentUser != null) {
         Navigator.pushReplacementNamed(context, '/');
@@ -83,13 +83,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       }
     } on AuthException catch (error) {
       if (mounted) {
-        String message = error.message;
-        if (message.contains('banned')) {
-          message = 'Account suspended. Please contact support.';
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        _showErrorSnackBar(error.message);
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackBar('An unexpected error occurred. Please try again.');
       }
     } finally {
       if (mounted) {
@@ -126,25 +124,21 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    // Define theme colors for dark theme
-    const backgroundColor = Color(0xFF121212);
-    const surfaceColor = Color(0xFF1E1E1E);
-    const primaryColor = Color(0xFF6A42F4); // Primary purple
-    const accentColor = Color(0xFF9D8DFF); // Accent purple
-    final gradientStart = Color(0xFF7F57F1);
-    final gradientEnd = Color(0xFF5B30EA);
-    
     return PopScope(
-      canPop: false, // Prevent back navigation completely
+      canPop: false,
       child: Scaffold(
-        backgroundColor: backgroundColor,
+        backgroundColor: MarkMeTheme.darkBackground,
         body: Container(
           decoration: BoxDecoration(
-            color: backgroundColor,
+            gradient: MarkMeTheme.backgroundGradient,
             image: DecorationImage(
-              image: AssetImage('assets/images/login_background_pattern.png'),
+              image: const AssetImage('assets/images/login_background_pattern.png'),
               fit: BoxFit.cover,
-              opacity: 0.05, // Very subtle pattern
+              opacity: 0.05,
+              colorFilter: ColorFilter.mode(
+                MarkMeTheme.primaryYellow.withOpacity(0.1),
+                BlendMode.overlay,
+              ),
             ),
           ),
           child: SafeArea(
@@ -172,139 +166,71 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           alignment: Alignment.centerLeft,
                           child: Hero(
                             tag: 'markme_logo',
-                            child: Container(
-                              height: 64,
-                              width: 64,
-                              decoration: BoxDecoration(
-                                color: surfaceColor,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: primaryColor.withOpacity(0.2),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  Icons.check_circle_outline,
-                                  size: 40,
-                                  color: primaryColor,
-                                ),
-                              ),
+                            child: const MarkMeLogo(
+                              size: 80,
+                              variant: LogoVariant.full,
                             ),
                           ),
                         ),
                         const SizedBox(height: 32),
                         
                         // Welcome Header
-                        const Text(
+                        Text(
                           'Welcome to MarkMe!',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
+                          style: MarkMeTheme.headingStyle,
                         ),
                         const SizedBox(height: 8),
-                        const Text(
+                        Text(
                           'The Next Generation of Attendance Tracking',
-                          style: TextStyle(
-                            color: Color(0xFFBBBBBB),
-                            fontSize: 16,
-                            letterSpacing: 0.3,
-                          ),
+                          style: MarkMeTheme.subheadingStyle,
                         ),
                         const SizedBox(height: 40),
                         
                         // Login Form
                         Form(
-                          key: _formKey,
-                          child: Column(
+            key: _formKey,
+            child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Email Field
-                              const Text(
-                                'Email',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
+              children: [
+                              Text('Email', style: MarkMeTheme.labelStyle),
                               const SizedBox(height: 8),
-                              TextFormField(
-                                controller: _emailController,
-                                keyboardType: TextInputType.emailAddress,
-                                style: const TextStyle(color: Colors.white),
-                                cursorColor: primaryColor,
-                                decoration: InputDecoration(
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                                style: const TextStyle(color: MarkMeTheme.primaryWhite),
+                                cursorColor: MarkMeTheme.primaryYellow,
+                                decoration: MarkMeTheme.getInputDecoration(
                                   hintText: 'Enter your email',
-                                  hintStyle: TextStyle(color: Colors.white38),
-                                  prefixIcon: Icon(
-                                    Icons.email_outlined,
-                                    color: Colors.white54,
-                                  ),
-                                  filled: true,
-                                  fillColor: surfaceColor,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(
-                                      color: primaryColor,
-                                      width: 1.5,
-                                    ),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                    horizontal: 16,
-                                  ),
+                                  prefixIcon: Icons.email_outlined,
                                 ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter your email';
-                                  }
-                                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                                    return 'Please enter a valid email';
-                                  }
-                                  return null;
-                                },
-                              ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your email';
+                    }
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                      return 'Please enter a valid email';
+                    }
+                    return null;
+                  },
+                ),
                               const SizedBox(height: 24),
                               
-                              // Password Field
-                              const Text(
-                                'Password',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
+                              Text('Password', style: MarkMeTheme.labelStyle),
                               const SizedBox(height: 8),
-                              TextFormField(
-                                controller: _passwordController,
+                TextFormField(
+                  controller: _passwordController,
                                 obscureText: _obscurePassword,
-                                style: const TextStyle(color: Colors.white),
-                                cursorColor: primaryColor,
-                                decoration: InputDecoration(
+                                style: const TextStyle(color: MarkMeTheme.primaryWhite),
+                                cursorColor: MarkMeTheme.primaryYellow,
+                                decoration: MarkMeTheme.getInputDecoration(
                                   hintText: 'Enter your password',
-                                  hintStyle: TextStyle(color: Colors.white38),
-                                  prefixIcon: Icon(
-                                    Icons.lock_outline,
-                                    color: Colors.white54,
-                                  ),
+                                  prefixIcon: Icons.lock_outline,
                                   suffixIcon: IconButton(
                                     icon: Icon(
                                       _obscurePassword
                                           ? Icons.visibility_outlined
                                           : Icons.visibility_off_outlined,
-                                      color: Colors.white54,
+                                      color: MarkMeTheme.primaryWhite.withOpacity(0.7),
                                     ),
                                     onPressed: () {
                                       setState(() {
@@ -312,38 +238,20 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                       });
                                     },
                                   ),
-                                  filled: true,
-                                  fillColor: surfaceColor,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(
-                                      color: primaryColor,
-                                      width: 1.5,
-                                    ),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                    horizontal: 16,
-                                  ),
                                 ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter your password';
-                                  }
-                                  return null;
-                                },
-                              ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your password';
+                    }
+                    return null;
+                  },
+                ),
                               const SizedBox(height: 16),
                               
                               // Remember Me and Forgot Password
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  // Remember Me Checkbox
                                   Row(
                                     children: [
                                       SizedBox(
@@ -356,31 +264,26 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                               _rememberMe = value ?? false;
                                             });
                                           },
-                                          activeColor: primaryColor,
+                                          activeColor: MarkMeTheme.primaryYellow,
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(4),
                                           ),
                                           side: BorderSide(
-                                            color: Colors.white54,
+                                            color: MarkMeTheme.primaryWhite.withOpacity(0.7),
                                             width: 1.5,
                                           ),
                                         ),
                                       ),
                                       const SizedBox(width: 8),
-                                      const Text(
+                                      Text(
                                         'Remember Me',
-                                        style: TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 14,
-                                        ),
+                                        style: MarkMeTheme.labelStyle,
                                       ),
                                     ],
                                   ),
                                   
-                                  // Forgot Password Link
                                   TextButton(
                                     onPressed: () {
-                                      // TODO: Implement forgot password flow
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         const SnackBar(
                                           content: Text('Forgot password functionality coming soon!'),
@@ -389,15 +292,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                       );
                                     },
                                     style: TextButton.styleFrom(
-                                      foregroundColor: accentColor,
+                                      foregroundColor: MarkMeTheme.primaryYellow,
                                       padding: EdgeInsets.zero,
                                       minimumSize: const Size(0, 0),
                                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                     ),
-                                    child: const Text(
+                                    child: Text(
                                       'Forgot Password?',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
+                                      style: MarkMeTheme.labelStyle.copyWith(
+                                        color: MarkMeTheme.primaryYellow,
                                       ),
                                     ),
                                   ),
@@ -410,11 +313,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 width: double.infinity,
                                 height: 56,
                                 child: ElevatedButton(
-                                  onPressed: _isLoading ? null : _submitForm,
+                  onPressed: _isLoading ? null : _submitForm,
                                   style: ElevatedButton.styleFrom(
-                                    foregroundColor: Colors.white,
+                                    foregroundColor: MarkMeTheme.darkBackground,
                                     backgroundColor: Colors.transparent,
-                                    disabledForegroundColor: Colors.white60,
+                                    disabledForegroundColor: MarkMeTheme.darkBackground.withOpacity(0.6),
                                     disabledBackgroundColor: Colors.transparent,
                                     elevation: 0,
                                     padding: EdgeInsets.zero,
@@ -427,21 +330,17 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                       gradient: _isLoading 
                                           ? LinearGradient(
                                               colors: [
-                                                gradientStart.withOpacity(0.7),
-                                                gradientEnd.withOpacity(0.7),
+                                                MarkMeTheme.primaryYellow.withOpacity(0.7),
+                                                MarkMeTheme.primaryYellow.withOpacity(0.5),
                                               ],
                                               begin: Alignment.centerLeft,
                                               end: Alignment.centerRight,
                                             )
-                                          : LinearGradient(
-                                              colors: [gradientStart, gradientEnd],
-                                              begin: Alignment.centerLeft,
-                                              end: Alignment.centerRight,
-                                            ),
+                                          : MarkMeTheme.buttonGradient,
                                       borderRadius: BorderRadius.circular(16),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: gradientStart.withOpacity(0.3),
+                                          color: MarkMeTheme.primaryYellow.withOpacity(0.3),
                                           blurRadius: 8,
                                           offset: const Offset(0, 4),
                                         ),
@@ -449,22 +348,18 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                     ),
                                     child: Container(
                                       alignment: Alignment.center,
-                                      child: _isLoading
+                  child: _isLoading 
                                           ? const SizedBox(
                                               width: 24,
                                               height: 24,
                                               child: CircularProgressIndicator(
                                                 strokeWidth: 2.5,
-                                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                                valueColor: AlwaysStoppedAnimation<Color>(MarkMeTheme.darkBackground),
                                               ),
                                             )
-                                          : const Text(
+                                          : Text(
                                               'Sign In',
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                letterSpacing: 0.5,
-                                              ),
+                                              style: MarkMeTheme.buttonTextStyle,
                                             ),
                                     ),
                                   ),
@@ -481,8 +376,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           alignment: Alignment.center,
                           child: Text(
                             '© ${DateTime.now().year} MarkMe • Version 1.0.0',
-                            style: const TextStyle(
-                              color: Colors.white38,
+                            style: TextStyle(
+                              color: MarkMeTheme.primaryWhite.withOpacity(0.4),
                               fontSize: 12,
                             ),
                           ),
