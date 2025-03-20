@@ -256,43 +256,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     return null;
                   },
                 ),
-                              const SizedBox(height: 16),
-                              
-                              // Remember Me and Forgot Password
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      SizedBox(
-                                        height: 24,
-                                        width: 24,
-                                        child: Checkbox(
-                                          value: _rememberMe,
-                                          onChanged: (value) {
-                                            setState(() {
-                                              _rememberMe = value ?? false;
-                                            });
-                                          },
-                                          activeColor: MarkMeTheme.primaryYellow,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(4),
-                                          ),
-                                          side: BorderSide(
-                                            color: MarkMeTheme.primaryWhite.withOpacity(0.7),
-                                            width: 1.5,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Remember Me',
-                                        style: MarkMeTheme.labelStyle,
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
                               const SizedBox(height: 32),
                               
                               // Sign In Button
