@@ -11,6 +11,7 @@ import '../models/lobby.dart';
 import '../components/error_widget_handler.dart';
 import '../components/empty_state_widget.dart';
 import './create_lobby_screen.dart';
+import '../theme/markme_theme.dart';
 
 class HomeScreen extends StatefulWidget {
   final AuthService authService;
@@ -286,50 +287,94 @@ class _HomeScreenState extends State<HomeScreen> {
           final tabController = DefaultTabController.of(context);
           return ListenableProvider.value(
             value: tabController,
-            child: Scaffold(
-              appBar: AppBar(
-                title: const Text('MarkMe'),
-                bottom: const TabBar(
-                  tabs: [
-                    Tab(icon: Icon(Icons.folder), text: 'Folders'),
-                    Tab(icon: Icon(Icons.group), text: 'Lobbies'),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              decoration: BoxDecoration(
+                gradient: MarkMeTheme.backgroundGradient,
+                image: DecorationImage(
+                  image: AssetImage('assets/images/subtle_pattern.png'),
+                  opacity: 0.03,
+                  repeat: ImageRepeat.repeat,
+                ),
+              ),
+              child: Scaffold(
+                backgroundColor: Colors.transparent,
+                appBar: AppBar(
+                  elevation: 0,
+                  title: Row(
+                    children: [
+                      Image.asset('assets/images/markme_icon.png', height: 28),
+                      const SizedBox(width: 10),
+                      const Text('MarkMe', 
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                  bottom: PreferredSize(
+                    preferredSize: const Size.fromHeight(48),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: TabBar(
+                        indicator: BoxDecoration(
+                          borderRadius: BorderRadius.circular(50.0),
+                          color: MarkMeTheme.primaryYellow.withOpacity(0.15),
+                          border: Border.all(
+                            color: MarkMeTheme.primaryYellow,
+                            width: 1.5,
+                          ),
+                        ),
+                        labelColor: MarkMeTheme.primaryYellow,
+                        unselectedLabelColor: MarkMeTheme.primaryWhite.withOpacity(0.7),
+                        tabs: const [
+                          Tab(icon: Icon(Icons.folder), text: 'Folders'),
+                          Tab(icon: Icon(Icons.group), text: 'Lobbies'),
+                        ],
+                      ),
+                    ),
+                  ),
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Icons.info_outline),
+                      onPressed: () => _showAboutDialog(context),
+                      tooltip: 'About',
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.person_outline),
+                      onPressed: () => _showUserDialog(context),
+                      tooltip: 'User Profile',
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.logout),
+                      onPressed: () async {
+                        try {
+                          await widget.authService.signOut();
+                          if (context.mounted) {
+                            Navigator.pushReplacementNamed(context, '/login');
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Logout failed: $e')),
+                            );
+                          }
+                        }
+                      },
+                      tooltip: 'Logout',
+                    ),
                   ],
                 ),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.info_outline),
-                    onPressed: () => _showAboutDialog(context),
-                    tooltip: 'About',
+                body: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: TabBarView(
+                    physics: const BouncingScrollPhysics(),
+                    children: [_buildFolderContent(), _buildLobbyContent(context)],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.person_outline),
-                    onPressed: () => _showUserDialog(context),
-                    tooltip: 'User Profile',
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.logout),
-                    onPressed: () async {
-                      try {
-                        await widget.authService.signOut();
-                        if (context.mounted) {
-                          Navigator.pushReplacementNamed(context, '/login');
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Logout failed: $e')),
-                          );
-                        }
-                      }
-                    },
-                    tooltip: 'Logout',
-                  ),
-                ],
+                ),
+                floatingActionButton: _buildFAB(context),
               ),
-              body: TabBarView(
-                children: [_buildFolderContent(), _buildLobbyContent(context)],
-              ),
-              floatingActionButton: _buildFAB(context),
             ),
           );
         },
@@ -339,26 +384,83 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildFolderContent() {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Welcome ${widget.authService.currentUser?.email ?? 'User'}!',
-            style: Theme.of(context).textTheme.headlineMedium,
+          TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0, end: 1),
+            duration: const Duration(milliseconds: 800),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Transform.translate(
+                  offset: Offset(0, 20 * (1 - value)),
+                  child: Text(
+                    'Welcome ${widget.authService.currentUser?.email ?? 'User'}!',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      color: MarkMeTheme.primaryWhite,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
-          const SizedBox(height: 20),
-          const Text(
-            'Your Folders:',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Container(
+                height: 24,
+                width: 4,
+                decoration: BoxDecoration(
+                  color: MarkMeTheme.primaryYellow,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Your Folders',
+                style: TextStyle(
+                  fontSize: 18, 
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.3,
+                  color: MarkMeTheme.primaryWhite,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
           Expanded(
             child: FutureBuilder<List<String>>(
               future: _foldersFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(MarkMeTheme.primaryYellow),
+                            strokeWidth: 2.5,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Loading folders...',
+                          style: TextStyle(
+                            color: MarkMeTheme.primaryWhite.withOpacity(0.7),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
                 }
 
                 if (snapshot.hasError) {
@@ -368,30 +470,113 @@ class _HomeScreenState extends State<HomeScreen> {
                 final folders = snapshot.data ?? [];
 
                 if (folders.isEmpty) {
-                  return const Center(child: Text('No folders yet'));
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: MarkMeTheme.surfaceDark,
+                            borderRadius: BorderRadius.circular(40),
+                            border: Border.all(
+                              color: MarkMeTheme.primaryYellow.withOpacity(0.2),
+                              width: 1,
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.folder_outlined,
+                            size: 40,
+                            color: MarkMeTheme.primaryYellow.withOpacity(0.7),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'No folders yet',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                            color: MarkMeTheme.primaryWhite,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Tap the + button to create your first folder',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: MarkMeTheme.primaryWhite.withOpacity(0.6),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  );
                 }
 
                 return ListView.builder(
                   itemCount: folders.length,
+                  physics: const BouncingScrollPhysics(),
                   itemBuilder: (context, index) {
                     final folder = folders[index];
-                    return Card(
-                      child: ListTile(
-                        title: Text(folder),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => FolderScreen(
-                                    folderName: folder,
-                                    folderService: widget.folderService,
-                                  ),
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: MarkMeTheme.primaryYellow.withOpacity(0.1),
+                            width: 1,
+                          ),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          highlightColor: MarkMeTheme.primaryYellow.withOpacity(0.05),
+                          splashColor: MarkMeTheme.primaryYellow.withOpacity(0.1),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FolderScreen(
+                                  folderName: folder,
+                                  folderService: widget.folderService,
+                                ),
+                              ),
+                            );
+                          },
+                          onLongPress: () => _showFolderContextMenu(context, folder),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: ListTile(
+                              leading: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: MarkMeTheme.primaryYellow.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.folder,
+                                  color: MarkMeTheme.primaryYellow,
+                                  size: 24,
+                                ),
+                              ),
+                              title: Text(
+                                folder,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 16,
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                              trailing: Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                                color: MarkMeTheme.primaryWhite.withOpacity(0.6),
+                              ),
                             ),
-                          );
-                        },
-                        onLongPress:
-                            () => _showFolderContextMenu(context, folder),
+                          ),
+                        ),
                       ),
                     );
                   },
@@ -448,25 +633,34 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildFAB(BuildContext context) {
     return Consumer<TabController>(
       builder: (context, tabController, child) {
-        if (tabController.index == 0) {
-          // Folders tab
-          return FloatingActionButton(
-            onPressed: _showCreateFolderDialog,
-            tooltip: 'Create Folder',
-            child: const Icon(Icons.create_new_folder),
-          );
-        } else {
-          // Lobbies tab
-          return FloatingActionButton(
-            onPressed:
-                () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => CreateLobbyScreen()),
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return ScaleTransition(scale: animation, child: child);
+          },
+          child: tabController.index == 0
+              ? FloatingActionButton(
+                  key: const ValueKey('folderFAB'),
+                  onPressed: _showCreateFolderDialog,
+                  tooltip: 'Create Folder',
+                  backgroundColor: MarkMeTheme.primaryYellow,
+                  foregroundColor: MarkMeTheme.darkBackground,
+                  elevation: 4,
+                  child: const Icon(Icons.create_new_folder, size: 26),
+                )
+              : FloatingActionButton(
+                  key: const ValueKey('lobbyFAB'),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CreateLobbyScreen()),
+                  ),
+                  tooltip: 'Create Lobby',
+                  backgroundColor: MarkMeTheme.primaryYellow,
+                  foregroundColor: MarkMeTheme.darkBackground,
+                  elevation: 4,
+                  child: const Icon(Icons.add, size: 26),
                 ),
-            tooltip: 'Create Lobby',
-            child: const Icon(Icons.add),
-          );
-        }
+        );
       },
     );
   }
@@ -495,16 +689,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildLobbyList(List<Lobby> lobbies) {
     return RefreshIndicator(
-      onRefresh:
-          () =>
-              Provider.of<LobbyProvider>(
-                context,
-                listen: false,
-              ).fetchActiveLobbies(),
+      color: MarkMeTheme.primaryYellow,
+      backgroundColor: MarkMeTheme.surfaceDark,
+      onRefresh: () => Provider.of<LobbyProvider>(
+        context,
+        listen: false,
+      ).fetchActiveLobbies(),
       child: ListView.separated(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         itemCount: lobbies.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 8),
+        physics: const BouncingScrollPhysics(),
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final lobby = lobbies[index];
           return _LobbyListItem(
@@ -529,21 +724,18 @@ class _LobbyListItem extends StatelessWidget {
     final isHost = user?.id == lobby.hostId;
 
     return Card(
-      child: ListTile(
-        leading: const Icon(Icons.group),
-        title: Text(lobby.name, style: Theme.of(context).textTheme.titleMedium),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (isHost) Text('Code: ${lobby.entryCode}'),
-            const SizedBox(height: 4),
-            _buildLobbyStats(),
-          ],
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: isHost 
+              ? MarkMeTheme.primaryYellow.withOpacity(0.3)
+              : Colors.transparent,
+          width: 1,
         ),
-        trailing: IconButton(
-          icon: const Icon(Icons.exit_to_app),
-          onPressed: () => onLeaveLobby(lobby.id),
-        ),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
         onTap: () async {
           final lobbyService = Provider.of<LobbyService>(
             context,
@@ -580,23 +772,138 @@ class _LobbyListItem extends StatelessWidget {
             );
           }
         },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: MarkMeTheme.primaryYellow.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.group,
+                    color: MarkMeTheme.primaryYellow,
+                  ),
+                ),
+                title: Text(
+                  lobby.name,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 17,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                trailing: IconButton(
+                  icon: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.exit_to_app,
+                      color: Colors.redAccent,
+                      size: 20,
+                    ),
+                  ),
+                  onPressed: () => onLeaveLobby(lobby.id),
+                ),
+              ),
+              if (isHost)
+                Padding(
+                  padding: const EdgeInsets.only(left: 72.0, right: 16.0, bottom: 8.0),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                    decoration: BoxDecoration(
+                      color: MarkMeTheme.primaryYellow.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: MarkMeTheme.primaryYellow.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.vpn_key,
+                          size: 14,
+                          color: MarkMeTheme.primaryYellow,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Code: ${lobby.entryCode}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: MarkMeTheme.primaryYellow,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.only(left: 72.0, right: 16.0, top: 4.0),
+                child: _buildEnhancedLobbyStats(),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildLobbyStats() {
+  Widget _buildEnhancedLobbyStats() {
     return Row(
       children: [
-        _buildStatItem(Icons.people, '${lobby.memberCount}'),
-        const SizedBox(width: 12),
-        _buildStatItem(Icons.checklist, '${lobby.attendanceCount}'),
+        _buildStatItem(
+          Icons.people,
+          '${lobby.memberCount}',
+          'Members',
+        ),
+        const SizedBox(width: 20),
+        _buildStatItem(
+          Icons.checklist,
+          '${lobby.attendanceCount}',
+          'Attendances',
+        ),
       ],
     );
   }
 
-  Widget _buildStatItem(IconData icon, String value) {
+  Widget _buildStatItem(IconData icon, String value, String label) {
     return Row(
-      children: [Icon(icon, size: 16), const SizedBox(width: 4), Text(value)],
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: MarkMeTheme.primaryWhite.withOpacity(0.7),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+            color: MarkMeTheme.primaryWhite,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: MarkMeTheme.primaryWhite.withOpacity(0.5),
+          ),
+        ),
+      ],
     );
   }
 
