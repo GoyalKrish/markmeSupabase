@@ -299,81 +299,54 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: Scaffold(
                 backgroundColor: Colors.transparent,
-                appBar: AppBar(
-                  elevation: 0,
-                  title: Row(
-                    children: [
-                      Image.asset('assets/images/markme_icon.png', height: 28),
-                      const SizedBox(width: 10),
-                      const Text('MarkMe', 
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                  bottom: PreferredSize(
-                    preferredSize: const Size.fromHeight(48),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: TabBar(
-                        indicator: BoxDecoration(
-                          borderRadius: BorderRadius.circular(50.0),
-                          color: MarkMeTheme.primaryYellow.withOpacity(0.15),
-                          border: Border.all(
-                            color: MarkMeTheme.primaryYellow,
-                            width: 1.5,
-                          ),
-                        ),
-                        labelColor: MarkMeTheme.primaryYellow,
-                        unselectedLabelColor: MarkMeTheme.primaryWhite.withOpacity(0.7),
-                        tabs: const [
-                          Tab(icon: Icon(Icons.folder), text: 'Folders'),
-                          Tab(icon: Icon(Icons.group), text: 'Lobbies'),
-                        ],
-                      ),
-                    ),
-                  ),
-                  actions: [
-                    IconButton(
-                      icon: const Icon(Icons.info_outline),
-                      onPressed: () => _showAboutDialog(context),
-                      tooltip: 'About',
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.person_outline),
-                      onPressed: () => _showUserDialog(context),
-                      tooltip: 'User Profile',
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.logout),
-                      onPressed: () async {
-                        try {
-                          await widget.authService.signOut();
-                          if (context.mounted) {
-                            Navigator.pushReplacementNamed(context, '/login');
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Logout failed: $e')),
-                            );
-                          }
-                        }
-                      },
-                      tooltip: 'Logout',
-                    ),
-                  ],
+                appBar: PreferredSize(
+                  preferredSize: const Size.fromHeight(kToolbarHeight),
+                  child: _buildAppBar(),
                 ),
-                body: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: TabBarView(
-                    physics: const BouncingScrollPhysics(),
-                    children: [_buildFolderContent(), _buildLobbyContent(context)],
-                  ),
+                body: TabBarView(
+                  physics: const BouncingScrollPhysics(), 
+                  children: [_buildFolderContent(), _buildLobbyContent(context)],
                 ),
                 floatingActionButton: _buildFAB(context),
+                bottomNavigationBar: Consumer<TabController>(
+                  builder: (context, tabController, child) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: MarkMeTheme.surfaceDark,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, -1),
+                          ),
+                        ],
+                      ),
+                      child: SafeArea(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              _buildNavItem(
+                                icon: Icons.folder,
+                                label: 'Folders',
+                                isSelected: tabController.index == 0,
+                                onTap: () => tabController.animateTo(0),
+                              ),
+                              _buildNavItem(
+                                icon: Icons.group,
+                                label: 'Lobbies',
+                                isSelected: tabController.index == 1,
+                                badgeCount: Provider.of<LobbyProvider>(context).activeLobbies.length,
+                                onTap: () => tabController.animateTo(1),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           );
@@ -475,23 +448,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          width: 80,
-                          height: 80,
+                          padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: MarkMeTheme.surfaceDark,
-                            borderRadius: BorderRadius.circular(40),
-                            border: Border.all(
-                              color: MarkMeTheme.primaryYellow.withOpacity(0.2),
-                              width: 1,
-                            ),
+                            color: MarkMeTheme.primaryYellow.withOpacity(0.1),
+                            shape: BoxShape.circle,
                           ),
                           child: Icon(
                             Icons.folder_outlined,
                             size: 40,
-                            color: MarkMeTheme.primaryYellow.withOpacity(0.7),
+                            color: MarkMeTheme.primaryYellow,
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
                         Text(
                           'No folders yet',
                           style: TextStyle(
@@ -501,13 +469,30 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          'Tap the + button to create your first folder',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: MarkMeTheme.primaryWhite.withOpacity(0.6),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 40),
+                          child: Text(
+                            'Create your first folder to start organizing your attendance records',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: MarkMeTheme.primaryWhite.withOpacity(0.7),
+                            ),
                           ),
-                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton.icon(
+                          onPressed: _showCreateFolderDialog,
+                          icon: const Icon(Icons.add),
+                          label: const Text('Create Folder'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: MarkMeTheme.primaryYellow,
+                            foregroundColor: MarkMeTheme.darkBackground,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -519,63 +504,87 @@ class _HomeScreenState extends State<HomeScreen> {
                   physics: const BouncingScrollPhysics(),
                   itemBuilder: (context, index) {
                     final folder = folders[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: Card(
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(
-                            color: MarkMeTheme.primaryYellow.withOpacity(0.1),
-                            width: 1,
+                    return InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FolderScreen(
+                              folderName: folder,
+                              folderService: widget.folderService,
+                            ),
                           ),
-                        ),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          highlightColor: MarkMeTheme.primaryYellow.withOpacity(0.05),
-                          splashColor: MarkMeTheme.primaryYellow.withOpacity(0.1),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => FolderScreen(
-                                  folderName: folder,
-                                  folderService: widget.folderService,
-                                ),
+                        );
+                      },
+                      onLongPress: () => _showFolderContextMenu(context, folder),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 50,
+                              height: 50,
+                              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: MarkMeTheme.primaryYellow.withOpacity(0.1),
+                                shape: BoxShape.circle,
                               ),
-                            );
-                          },
-                          onLongPress: () => _showFolderContextMenu(context, folder),
-                          child: Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: ListTile(
-                              leading: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: MarkMeTheme.primaryYellow.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
+                              child: Center(
                                 child: Icon(
                                   Icons.folder,
                                   color: MarkMeTheme.primaryYellow,
                                   size: 24,
                                 ),
                               ),
-                              title: Text(
-                                folder,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 16,
-                                  letterSpacing: 0.2,
+                            ),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    bottom: BorderSide(
+                                      color: MarkMeTheme.primaryWhite.withOpacity(0.1),
+                                      width: 0.5,
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            folder,
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Tap to view attendances',
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color: MarkMeTheme.primaryWhite.withOpacity(0.6),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.more_vert,
+                                        size: 20,
+                                        color: MarkMeTheme.primaryWhite,
+                                      ),
+                                      onPressed: () => _showFolderContextMenu(context, folder),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              trailing: Icon(
-                                Icons.arrow_forward_ios,
-                                size: 16,
-                                color: MarkMeTheme.primaryWhite.withOpacity(0.6),
-                              ),
                             ),
-                          ),
+                          ],
                         ),
                       ),
                     );
@@ -633,33 +642,23 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildFAB(BuildContext context) {
     return Consumer<TabController>(
       builder: (context, tabController, child) {
-        return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          transitionBuilder: (Widget child, Animation<double> animation) {
-            return ScaleTransition(scale: animation, child: child);
-          },
-          child: tabController.index == 0
-              ? FloatingActionButton(
-                  key: const ValueKey('folderFAB'),
-                  onPressed: _showCreateFolderDialog,
-                  tooltip: 'Create Folder',
-                  backgroundColor: MarkMeTheme.primaryYellow,
-                  foregroundColor: MarkMeTheme.darkBackground,
-                  elevation: 4,
-                  child: const Icon(Icons.create_new_folder, size: 26),
-                )
-              : FloatingActionButton(
-                  key: const ValueKey('lobbyFAB'),
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const CreateLobbyScreen()),
-                  ),
-                  tooltip: 'Create Lobby',
-                  backgroundColor: MarkMeTheme.primaryYellow,
-                  foregroundColor: MarkMeTheme.darkBackground,
-                  elevation: 4,
-                  child: const Icon(Icons.add, size: 26),
+        final isFirstTab = tabController.index == 0;
+        
+        return FloatingActionButton(
+          onPressed: isFirstTab
+              ? _showCreateFolderDialog
+              : () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CreateLobbyScreen()),
                 ),
+          tooltip: isFirstTab ? 'Create Folder' : 'Create Lobby',
+          backgroundColor: MarkMeTheme.primaryYellow,
+          child: const Icon(
+            Icons.add,
+            color: MarkMeTheme.darkBackground,
+          ),
+          elevation: 4,
+          shape: const CircleBorder(),
         );
       },
     );
@@ -710,6 +709,185 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  Widget _buildAppBar() {
+    return AppBar(
+      elevation: 0,
+      title: Row(
+        children: [
+          Image.asset('assets/images/markme_icon.png', height: 28),
+          const SizedBox(width: 10),
+          const Text('MarkMe', 
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.search),
+          tooltip: 'Search',
+          onPressed: () => _showSearchModal(context),
+        ),
+        PopupMenuButton(
+          icon: const Icon(Icons.more_vert),
+          tooltip: 'More options',
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              child: const Text('Profile'),
+              onTap: () => _showUserDialog(context),
+            ),
+            PopupMenuItem(
+              child: const Text('About'),
+              onTap: () => _showAboutDialog(context),
+            ),
+            PopupMenuItem(
+              child: const Text('Logout'),
+              onTap: () async {
+                try {
+                  await widget.authService.signOut();
+                  if (context.mounted) {
+                    Navigator.pushReplacementNamed(context, '/login');
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Logout failed: $e')),
+                    );
+                  }
+                }
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  void _showSearchModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: MarkMeTheme.surfaceDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Consumer<TabController>(
+          builder: (context, tabController, _) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                top: 20,
+                left: 20,
+                right: 20,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    height: 4,
+                    width: 40,
+                    decoration: BoxDecoration(
+                      color: MarkMeTheme.primaryWhite.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: tabController.index == 0 ? 'Search folders...' : 'Search lobbies...',
+                      prefixIcon: const Icon(Icons.search),
+                      filled: true,
+                      fillColor: MarkMeTheme.darkBackground,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                    ),
+                    style: const TextStyle(color: MarkMeTheme.primaryWhite),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildNavItem({
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    int? badgeCount,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              children: [
+                Icon(
+                  icon,
+                  color: isSelected 
+                      ? MarkMeTheme.primaryYellow 
+                      : MarkMeTheme.primaryWhite.withOpacity(0.7),
+                  size: 24,
+                ),
+                if (badgeCount != null && badgeCount > 0)
+                  Positioned(
+                    right: -4,
+                    top: -4,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: MarkMeTheme.primaryYellow,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        badgeCount > 99 ? '99+' : '$badgeCount',
+                        style: TextStyle(
+                          color: MarkMeTheme.darkBackground,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected 
+                    ? MarkMeTheme.primaryYellow 
+                    : MarkMeTheme.primaryWhite.withOpacity(0.7),
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _LobbyListItem extends StatelessWidget {
@@ -723,47 +901,17 @@ class _LobbyListItem extends StatelessWidget {
     final user = Provider.of<AuthService>(context).currentUser;
     final isHost = user?.id == lobby.hostId;
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isHost 
-              ? MarkMeTheme.primaryYellow.withOpacity(0.3)
-              : Colors.transparent,
-          width: 1,
-        ),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () async {
-          final lobbyService = Provider.of<LobbyService>(
-            context,
-            listen: false,
-          );
-          final authService = Provider.of<AuthService>(context, listen: false);
-          final isHost = authService.currentUser?.id == lobby.hostId;
+    return InkWell(
+      onTap: () async {
+        final lobbyService = Provider.of<LobbyService>(
+          context,
+          listen: false,
+        );
+        final authService = Provider.of<AuthService>(context, listen: false);
+        final isHost = authService.currentUser?.id == lobby.hostId;
 
-          if (isHost) {
-            if (context.mounted) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ActiveLobbyScreen(lobbyId: lobby.id),
-                ),
-              );
-            }
-            return;
-          }
-
-          final isMember = await lobbyService.isUserMember(lobby.id);
-          bool shouldNavigate = isMember;
-          
-          if (!isMember) {
-            shouldNavigate = await _showEntryCodeDialog(context, lobby.id, lobbyService);
-          }
-
-          if (shouldNavigate && context.mounted) {
+        if (isHost) {
+          if (context.mounted) {
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -771,139 +919,171 @@ class _LobbyListItem extends StatelessWidget {
               ),
             );
           }
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: MarkMeTheme.primaryYellow.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.group,
-                    color: MarkMeTheme.primaryYellow,
-                  ),
-                ),
-                title: Text(
-                  lobby.name,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 17,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                trailing: IconButton(
-                  icon: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.exit_to_app,
-                      color: Colors.redAccent,
-                      size: 20,
-                    ),
-                  ),
-                  onPressed: () => onLeaveLobby(lobby.id),
+          return;
+        }
+
+        final isMember = await lobbyService.isUserMember(lobby.id);
+        bool shouldNavigate = isMember;
+        
+        if (!isMember) {
+          shouldNavigate = await _showEntryCodeDialog(context, lobby.id, lobbyService);
+        }
+
+        if (shouldNavigate && context.mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ActiveLobbyScreen(lobbyId: lobby.id),
+            ),
+          );
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: isHost
+                    ? MarkMeTheme.primaryYellow.withOpacity(0.15)
+                    : MarkMeTheme.primaryWhite.withOpacity(0.1),
+                shape: BoxShape.circle,
+                border: isHost
+                    ? Border.all(
+                        color: MarkMeTheme.primaryYellow.withOpacity(0.5),
+                        width: 1.5,
+                      )
+                    : null,
+              ),
+              child: Center(
+                child: Icon(
+                  Icons.group,
+                  color: isHost
+                      ? MarkMeTheme.primaryYellow
+                      : MarkMeTheme.primaryWhite,
+                  size: 24,
                 ),
               ),
-              if (isHost)
-                Padding(
-                  padding: const EdgeInsets.only(left: 72.0, right: 16.0, bottom: 8.0),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                    decoration: BoxDecoration(
-                      color: MarkMeTheme.primaryYellow.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: MarkMeTheme.primaryYellow.withOpacity(0.3),
-                        width: 1,
+            ),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: MarkMeTheme.primaryWhite.withOpacity(0.1),
+                      width: 0.5,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  lobby.name,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Text(
+                                'Active',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: MarkMeTheme.primaryWhite.withOpacity(0.5),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              if (isHost)
+                                Container(
+                                  margin: const EdgeInsets.only(right: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: MarkMeTheme.primaryYellow.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                      color: MarkMeTheme.primaryYellow.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Code: ${lobby.entryCode}',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: MarkMeTheme.primaryYellow,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              Icon(
+                                Icons.people,
+                                size: 14,
+                                color: MarkMeTheme.primaryWhite.withOpacity(0.6),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${lobby.memberCount}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: MarkMeTheme.primaryWhite.withOpacity(0.6),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Icon(
+                                Icons.checklist,
+                                size: 14,
+                                color: MarkMeTheme.primaryWhite.withOpacity(0.6),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${lobby.attendanceCount}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: MarkMeTheme.primaryWhite.withOpacity(0.6),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.vpn_key,
-                          size: 14,
-                          color: MarkMeTheme.primaryYellow,
+                    GestureDetector(
+                      onTap: () => onLeaveLobby(lobby.id),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(
+                          Icons.exit_to_app,
+                          size: 20,
+                          color: Colors.redAccent.withOpacity(0.8),
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Code: ${lobby.entryCode}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: MarkMeTheme.primaryYellow,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              Padding(
-                padding: const EdgeInsets.only(left: 72.0, right: 16.0, top: 4.0),
-                child: _buildEnhancedLobbyStats(),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
-  }
-
-  Widget _buildEnhancedLobbyStats() {
-    return Row(
-      children: [
-        _buildStatItem(
-          Icons.people,
-          '${lobby.memberCount}',
-          'Members',
-        ),
-        const SizedBox(width: 20),
-        _buildStatItem(
-          Icons.checklist,
-          '${lobby.attendanceCount}',
-          'Attendances',
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatItem(IconData icon, String value, String label) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Icon(
-          icon,
-          size: 16,
-          color: MarkMeTheme.primaryWhite.withOpacity(0.7),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          value,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-            color: MarkMeTheme.primaryWhite,
-          ),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: MarkMeTheme.primaryWhite.withOpacity(0.5),
-          ),
-        ),
-      ],
     );
   }
 
