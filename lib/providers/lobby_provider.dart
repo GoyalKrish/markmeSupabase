@@ -95,7 +95,7 @@ class LobbyProvider with ChangeNotifier {
           .maybeSingle();
 
       if (response != null) {
-        _currentLobby = response as Map<String, dynamic>;
+        _currentLobby = response;
         notifyListeners();
       }
     } catch (e) {
