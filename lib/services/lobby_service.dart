@@ -23,7 +23,7 @@ class LobbyService {
         })
         .select()
         .single();
-    
+
     await _joinLobby(lobby['id'] as String);
     return lobby;
   }
@@ -37,7 +37,7 @@ class LobbyService {
         .eq('id', lobbyId)
         .eq('active', true)
         .single();
-    
+
     if (lobby == null) throw Exception('Invalid entry code');
     await _joinLobby(lobbyId);
   }
@@ -95,7 +95,8 @@ class LobbyService {
         .maybeSingle();
 
     if (existing != null) {
-      throw Exception('Student with ID ${student.id} already exists in this lobby');
+      throw Exception(
+          'Student with ID ${student.id} already exists in this lobby');
     }
 
     await _supabase.from('attendance_records').insert({
@@ -121,4 +122,28 @@ class LobbyService {
 
     await _supabase.from('attendance_records').insert(attendanceRecords);
   }
-} 
+
+  // Add a new deleteLobby method
+  Future<void> deleteLobby(String lobbyId) async {
+    // Check if the user is the host of the lobby
+    final lobby = await _supabase
+        .from('lobbies')
+        .select()
+        .eq('id', lobbyId)
+        .eq('host_id', _supabase.auth.currentUser!.id)
+        .maybeSingle();
+
+    if (lobby == null) {
+      throw Exception('You can only delete lobbies that you have created');
+    }
+
+    // Delete attendance records associated with this lobby
+    await _supabase.from('attendance_records').delete().eq('lobby_id', lobbyId);
+
+    // Delete lobby members associated with this lobby
+    await _supabase.from('lobby_members').delete().eq('lobby_id', lobbyId);
+
+    // Delete the lobby itself
+    await _supabase.from('lobbies').delete().eq('id', lobbyId);
+  }
+}

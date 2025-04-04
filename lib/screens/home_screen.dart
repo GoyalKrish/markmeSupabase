@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:markme/models/student.dart';
 import '../services/auth_service.dart';
 import '../services/folder_service.dart';
 import 'folder_screen.dart';
@@ -642,13 +643,27 @@ class _HomeScreenState extends State<HomeScreen> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   Spacer(),
-                                  Text(
-                                    '${Random().nextInt(20)} items',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 12,
-                                      color: MarkMeTheme.primaryWhite
-                                          .withOpacity(0.6),
-                                    ),
+                                  FutureBuilder<List<Student>>(
+                                    future: widget.folderService
+                                        .getStudents(folder),
+                                    builder: (context, snapshot) {
+                                      final recordCount = snapshot.hasData
+                                          ? snapshot.data!.length
+                                          : 0;
+                                      final text = snapshot.connectionState ==
+                                              ConnectionState.waiting
+                                          ? 'Loading...'
+                                          : '$recordCount Records';
+
+                                      return Text(
+                                        text,
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          color: MarkMeTheme.primaryWhite
+                                              .withOpacity(0.6),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ],
                               ),
@@ -827,6 +842,9 @@ class _HomeScreenState extends State<HomeScreen> {
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
             onTap: () => _handleLobbyTap(context, lobby),
+            onLongPress: lobby.hostId == widget.authService.currentUser?.id
+                ? () => _showLobbyOptionsMenu(context, lobby)
+                : null,
             child: Padding(
               padding: EdgeInsets.all(16),
               child: Row(
@@ -866,24 +884,34 @@ class _HomeScreenState extends State<HomeScreen> {
                                     MarkMeTheme.primaryWhite.withOpacity(0.6),
                               ),
                             ),
+                            SizedBox(width: 12),
+                            Icon(
+                              Icons.assignment_turned_in,
+                              size: 14,
+                              color: MarkMeTheme.primaryWhite.withOpacity(0.6),
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              '${lobby.attendanceCount} entries',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color:
+                                    MarkMeTheme.primaryWhite.withOpacity(0.6),
+                              ),
+                            ),
                           ],
-                        ),
-                        SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(2),
-                          child: LinearProgressIndicator(
-                            value: (lobby.memberCount > 0)
-                                ? (lobby.attendanceCount / lobby.memberCount)
-                                    .clamp(0.0, 1.0)
-                                : 0.0,
-                            backgroundColor: MarkMeTheme.darkBackground,
-                            color: MarkMeTheme.primaryYellow,
-                            minHeight: 4,
-                          ),
                         ),
                       ],
                     ),
                   ),
+                  if (lobby.hostId == widget.authService.currentUser?.id)
+                    IconButton(
+                      icon: Icon(
+                        Icons.more_vert,
+                        color: MarkMeTheme.primaryWhite.withOpacity(0.7),
+                      ),
+                      onPressed: () => _showLobbyOptionsMenu(context, lobby),
+                    ),
                 ],
               ),
             ),
@@ -1113,261 +1141,101 @@ class _HomeScreenState extends State<HomeScreen> {
       color: isActive ? Colors.greenAccent : Colors.grey,
     );
   }
-}
 
-class _LobbyListItem extends StatelessWidget {
-  final Lobby lobby;
-  final Function(String) onLeaveLobby;
+  void _deleteLobby(BuildContext context, Lobby lobby) async {
+    // Check if user is the host
+    if (lobby.hostId != widget.authService.currentUser?.id) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('You can only delete lobbies that you have created')),
+      );
+      return;
+    }
 
-  const _LobbyListItem({required this.lobby, required this.onLeaveLobby});
+    // Show confirmation dialog
+    final shouldDelete = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Delete Lobby'),
+            content: Text(
+                'Are you sure you want to delete "${lobby.name}"? This action cannot be undone.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
 
-  @override
-  Widget build(BuildContext context) {
-    final user = Provider.of<AuthService>(context).currentUser;
-    final isHost = user?.id == lobby.hostId;
+    if (!shouldDelete) return;
 
-    return InkWell(
-      onTap: () async {
-        final lobbyService = Provider.of<LobbyService>(
-          context,
-          listen: false,
+    try {
+      final lobbyService = Provider.of<LobbyService>(context, listen: false);
+      final lobbyProvider = Provider.of<LobbyProvider>(context, listen: false);
+
+      await lobbyService.deleteLobby(lobby.id);
+      await lobbyProvider.fetchActiveLobbies();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Lobby deleted successfully')),
         );
-        final authService = Provider.of<AuthService>(context, listen: false);
-        final isHost = authService.currentUser?.id == lobby.hostId;
-
-        if (isHost) {
-          if (context.mounted) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ActiveLobbyScreen(lobbyId: lobby.id),
-              ),
-            );
-          }
-          return;
-        }
-
-        final isMember = await lobbyService.isUserMember(lobby.id);
-        bool shouldNavigate = isMember;
-
-        if (!isMember) {
-          shouldNavigate =
-              await _showEntryCodeDialog(context, lobby.id, lobbyService);
-        }
-
-        if (shouldNavigate && context.mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ActiveLobbyScreen(lobbyId: lobby.id),
-            ),
-          );
-        }
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        child: Row(
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: isHost
-                    ? MarkMeTheme.primaryYellow.withOpacity(0.15)
-                    : MarkMeTheme.primaryWhite.withOpacity(0.1),
-                shape: BoxShape.circle,
-                border: isHost
-                    ? Border.all(
-                        color: MarkMeTheme.primaryYellow.withOpacity(0.5),
-                        width: 1.5,
-                      )
-                    : null,
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.group,
-                  color: isHost
-                      ? MarkMeTheme.primaryYellow
-                      : MarkMeTheme.primaryWhite,
-                  size: 24,
-                ),
-              ),
-            ),
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: MarkMeTheme.primaryWhite.withOpacity(0.1),
-                      width: 0.5,
-                    ),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  lobby.name,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              Text(
-                                'Active',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color:
-                                      MarkMeTheme.primaryWhite.withOpacity(0.5),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              if (isHost)
-                                Container(
-                                  margin: const EdgeInsets.only(right: 6),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: MarkMeTheme.primaryYellow
-                                        .withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(
-                                      color: MarkMeTheme.primaryYellow
-                                          .withOpacity(0.3),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    'Code: ${lobby.entryCode}',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: MarkMeTheme.primaryYellow,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              Icon(
-                                Icons.people,
-                                size: 14,
-                                color:
-                                    MarkMeTheme.primaryWhite.withOpacity(0.6),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${lobby.memberCount}',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color:
-                                      MarkMeTheme.primaryWhite.withOpacity(0.6),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Icon(
-                                Icons.checklist,
-                                size: 14,
-                                color:
-                                    MarkMeTheme.primaryWhite.withOpacity(0.6),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${lobby.attendanceCount}',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color:
-                                      MarkMeTheme.primaryWhite.withOpacity(0.6),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => onLeaveLobby(lobby.id),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        child: Icon(
-                          Icons.exit_to_app,
-                          size: 20,
-                          color: Colors.redAccent.withOpacity(0.8),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error deleting lobby: $e')),
+        );
+      }
+    }
   }
 
-  Future<bool> _showEntryCodeDialog(
-    BuildContext context,
-    String lobbyId,
-    LobbyService lobbyService,
-  ) async {
-    final codeController = TextEditingController();
-    bool joinSuccessful = false;
-
-    await showDialog<void>(
+  void _showLobbyOptionsMenu(BuildContext context, Lobby lobby) {
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Enter Lobby Code'),
-          content: TextField(
-            controller: codeController,
-            decoration: const InputDecoration(hintText: '6-digit code'),
-            keyboardType: TextInputType.number,
-            maxLength: 6,
+      backgroundColor: MarkMeTheme.surfaceDark,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.delete_outline, color: Colors.redAccent),
+                title: Text(
+                  'Delete Lobby',
+                  style: TextStyle(color: MarkMeTheme.primaryWhite),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _deleteLobby(context, lobby);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.cancel_outlined,
+                    color: MarkMeTheme.primaryWhite),
+                title: Text(
+                  'Cancel',
+                  style: TextStyle(color: MarkMeTheme.primaryWhite),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ],
           ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            TextButton(
-              child: const Text('Join'),
-              onPressed: () async {
-                try {
-                  await lobbyService.joinLobby(codeController.text, lobbyId);
-                  joinSuccessful = true;
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: ${e.toString()}')),
-                    );
-                  }
-                }
-              },
-            ),
-          ],
         );
       },
     );
-
-    return joinSuccessful;
   }
 }

@@ -54,40 +54,53 @@ class LobbyProvider with ChangeNotifier {
   }
 
   Future<void> fetchActiveLobbies() async {
-    final response = await _supabase
-        .from('lobbies')
-        .select('''
+    final response = await _supabase.from('lobbies').select('''
           *, 
           lobby_members(count),
           attendance_records(count)
-        ''')
-        .eq('active', true);
-    
+        ''').eq('active', true);
+
     _activeLobbies = (response as List<dynamic>)
         .map((lobby) => Lobby.fromJson(lobby as Map<String, dynamic>))
         .toList();
-    
+
     notifyListeners();
   }
 
   Future<void> fetchAttendanceRecords(String lobbyId) async {
     try {
-      final response = await _supabase
-          .from('attendance_records')
-          .select('''
+      final response = await _supabase.from('attendance_records').select('''
             id,
             lobby_id,
             student_name,
             student_system_id,
             recorded_at,
             device_id
-          ''')
-          .eq('lobby_id', lobbyId);
-      _attendanceRecords = (response as List<dynamic>).cast<Map<String, dynamic>>();
+          ''').eq('lobby_id', lobbyId);
+      _attendanceRecords =
+          (response as List<dynamic>).cast<Map<String, dynamic>>();
       notifyListeners();
     } catch (e) {
       print('Error fetching attendance: $e');
       rethrow;
     }
   }
-} 
+
+  Future<void> fetchLobbyDetails(String lobbyId) async {
+    try {
+      final response = await _supabase
+          .from('lobbies')
+          .select()
+          .eq('id', lobbyId)
+          .maybeSingle();
+
+      if (response != null) {
+        _currentLobby = response as Map<String, dynamic>;
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Error fetching lobby details: $e');
+      rethrow;
+    }
+  }
+}
