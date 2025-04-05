@@ -19,7 +19,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
-  bool _rememberMe = false;
+  final bool _rememberMe = false;
   
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -174,7 +174,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         const SizedBox(height: 32),
                         
                         // Welcome Header
-                        Container(
+                        SizedBox(
                           width: double.infinity,
                           child: Text(
                             'Welcome to MarkMe',
@@ -183,7 +183,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Container(
+                        SizedBox(
                           width: double.infinity,
                           child: Text(
                             'The Next Generation of Attendance Tracking',

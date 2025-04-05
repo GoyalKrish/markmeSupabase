@@ -5,7 +5,6 @@ import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import '../services/nfc_service.dart';
-import '../components/nfc_result_dialog.dart';
 import 'package:intl/intl.dart';
 
 class FolderScreen extends StatefulWidget {

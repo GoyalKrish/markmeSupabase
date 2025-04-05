@@ -37,8 +37,6 @@ class LobbyService {
         .eq('id', lobbyId)
         .eq('active', true)
         .single();
-
-    if (lobby == null) throw Exception('Invalid entry code');
     await _joinLobby(lobbyId);
   }
 

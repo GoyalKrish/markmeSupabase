@@ -12,7 +12,7 @@ class MarkMeLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: variant == LogoVariant.icon ? size : size * 0.75,
       width: variant == LogoVariant.icon ? size : size * 2,
       child: Stack(

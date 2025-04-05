@@ -4,7 +4,6 @@ import '../providers/lobby_provider.dart';
 import '../services/lobby_service.dart';
 import '../services/nfc_service.dart';
 import '../models/student.dart';
-import '../components/nfc_result_dialog.dart';
 import 'package:intl/intl.dart';
 import '../models/lobby.dart';
 import '../services/auth_service.dart';

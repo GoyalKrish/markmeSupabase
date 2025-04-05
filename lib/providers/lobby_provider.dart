@@ -1,7 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:realtime_client/realtime_client.dart';
-import 'package:supabase/supabase.dart';
 import '../models/lobby.dart';
 
 class LobbyProvider with ChangeNotifier {

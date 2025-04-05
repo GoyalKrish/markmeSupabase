@@ -68,7 +68,6 @@ class MyApp extends StatelessWidget {
           primary: MarkMeTheme.primaryYellow,
           secondary: MarkMeTheme.primaryYellow,
           surface: MarkMeTheme.surfaceDark,
-          background: MarkMeTheme.darkBackground,
         ),
         scaffoldBackgroundColor: MarkMeTheme.darkBackground,
         appBarTheme: AppBarTheme(

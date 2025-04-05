@@ -158,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Text('Email: ${user?.email ?? 'N/A'}'),
             const SizedBox(height: 8),
             Text(
-              'Registered: ${user?.createdAt != null ? DateFormat('yyyy-MM-dd – HH:mm').format(DateTime.parse(user!.createdAt!).toLocal()) : 'N/A'}',
+              'Registered: ${user?.createdAt != null ? DateFormat('yyyy-MM-dd – HH:mm').format(DateTime.parse(user!.createdAt).toLocal()) : 'N/A'}',
             ),
             const SizedBox(height: 8),
             Text('User ID: ${user?.id ?? 'N/A'}'),
@@ -401,16 +401,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               label: 'Folders',
                             ),
                             NavigationDestination(
-                              icon: Badge(
-                                label: Text(
-                                    '${Provider.of<LobbyProvider>(context).activeLobbies.length}'),
-                                child: Icon(Icons.group_outlined),
-                              ),
-                              selectedIcon: Badge(
-                                label: Text(
-                                    '${Provider.of<LobbyProvider>(context).activeLobbies.length}'),
-                                child: Icon(Icons.group),
-                              ),
+                              icon: Icon(Icons.group_outlined),
+                              selectedIcon: Icon(Icons.group),
                               label: 'Lobbies',
                             ),
                           ],
@@ -736,12 +728,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
           tooltip: isFirstTab ? 'Create Folder' : 'Create Lobby',
           backgroundColor: MarkMeTheme.primaryYellow,
+          elevation: 4,
+          shape: const CircleBorder(),
           child: const Icon(
             Icons.add,
             color: MarkMeTheme.darkBackground,
           ),
-          elevation: 4,
-          shape: const CircleBorder(),
         );
       },
     );
@@ -786,9 +778,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ).fetchActiveLobbies(),
       child: ListView(
         children: [
-          _buildSectionHeader('My Rooms', myRooms.isEmpty),
+          _buildSectionHeader('My Rooms (${myRooms.length})', myRooms.isEmpty),
           if (myRooms.isNotEmpty) ..._buildLobbyItems(myRooms),
-          _buildSectionHeader('Live Rooms', liveRooms.isEmpty),
+          _buildSectionHeader('Live Rooms (${liveRooms.length})', liveRooms.isEmpty),
           if (liveRooms.isNotEmpty) ..._buildLobbyItems(liveRooms),
         ],
       ),
