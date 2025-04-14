@@ -14,8 +14,6 @@ import '../components/empty_state_widget.dart';
 import './create_lobby_screen.dart';
 import '../theme/markme_theme.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lottie/lottie.dart';
-import 'dart:math';
 
 class HomeScreen extends StatefulWidget {
   final AuthService authService;
@@ -780,7 +778,8 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           _buildSectionHeader('My Rooms (${myRooms.length})', myRooms.isEmpty),
           if (myRooms.isNotEmpty) ..._buildLobbyItems(myRooms),
-          _buildSectionHeader('Live Rooms (${liveRooms.length})', liveRooms.isEmpty),
+          _buildSectionHeader(
+              'Live Rooms (${liveRooms.length})', liveRooms.isEmpty),
           if (liveRooms.isNotEmpty) ..._buildLobbyItems(liveRooms),
         ],
       ),
@@ -819,92 +818,103 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Widget> _buildLobbyItems(List<Lobby> lobbies) {
     return [
       for (final lobby in lobbies)
-        Card(
+        Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          color: MarkMeTheme.surfaceDark,
-          shape: RoundedRectangleBorder(
+          decoration: BoxDecoration(
+            color: MarkMeTheme.surfaceDark,
             borderRadius: BorderRadius.circular(16),
-            side: BorderSide(
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+            border: Border.all(
               color: MarkMeTheme.primaryYellow.withOpacity(0.1),
               width: 1,
             ),
           ),
-          elevation: 4,
-          shadowColor: Colors.black.withOpacity(0.2),
-          child: InkWell(
+          child: Material(
+            color: Colors.transparent,
             borderRadius: BorderRadius.circular(16),
-            onTap: () => _handleLobbyTap(context, lobby),
-            onLongPress: lobby.hostId == widget.authService.currentUser?.id
-                ? () => _showLobbyOptionsMenu(context, lobby)
-                : null,
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: MarkMeTheme.primaryYellow.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.group, color: MarkMeTheme.primaryYellow),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          lobby.name,
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: MarkMeTheme.primaryWhite,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Row(
-                          children: [
-                            _buildStatusIndicator(lobby.active),
-                            SizedBox(width: 8),
-                            Text(
-                              '${lobby.memberCount} members',
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                color:
-                                    MarkMeTheme.primaryWhite.withOpacity(0.6),
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            Icon(
-                              Icons.assignment_turned_in,
-                              size: 14,
-                              color: MarkMeTheme.primaryWhite.withOpacity(0.6),
-                            ),
-                            SizedBox(width: 4),
-                            Text(
-                              '${lobby.attendanceCount} entries',
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                color:
-                                    MarkMeTheme.primaryWhite.withOpacity(0.6),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (lobby.hostId == widget.authService.currentUser?.id)
-                    IconButton(
-                      icon: Icon(
-                        Icons.more_vert,
-                        color: MarkMeTheme.primaryWhite.withOpacity(0.7),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => _handleLobbyTap(context, lobby),
+              onLongPress: lobby.hostId == widget.authService.currentUser?.id
+                  ? () => _showLobbyOptionsMenu(context, lobby)
+                  : null,
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: MarkMeTheme.primaryYellow.withOpacity(0.1),
+                        shape: BoxShape.circle,
                       ),
-                      onPressed: () => _showLobbyOptionsMenu(context, lobby),
+                      child:
+                          Icon(Icons.group, color: MarkMeTheme.primaryYellow),
                     ),
-                ],
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            lobby.name,
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: MarkMeTheme.primaryWhite,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Row(
+                            children: [
+                              _buildStatusIndicator(lobby.active),
+                              SizedBox(width: 8),
+                              Text(
+                                '${lobby.memberCount} members',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  color:
+                                      MarkMeTheme.primaryWhite.withOpacity(0.6),
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Icon(
+                                Icons.assignment_turned_in,
+                                size: 14,
+                                color:
+                                    MarkMeTheme.primaryWhite.withOpacity(0.6),
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                '${lobby.attendanceCount} entries',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  color:
+                                      MarkMeTheme.primaryWhite.withOpacity(0.6),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (lobby.hostId == widget.authService.currentUser?.id)
+                      IconButton(
+                        icon: Icon(
+                          Icons.more_vert,
+                          color: MarkMeTheme.primaryWhite.withOpacity(0.7),
+                        ),
+                        onPressed: () => _showLobbyOptionsMenu(context, lobby),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
