@@ -14,6 +14,7 @@ import '../components/empty_state_widget.dart';
 import './create_lobby_screen.dart';
 import '../theme/markme_theme.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class HomeScreen extends StatefulWidget {
   final AuthService authService;
@@ -728,9 +729,14 @@ class _HomeScreenState extends State<HomeScreen> {
           backgroundColor: MarkMeTheme.primaryYellow,
           elevation: 4,
           shape: const CircleBorder(),
-          child: const Icon(
-            Icons.add,
-            color: MarkMeTheme.darkBackground,
+          child: SvgPicture.asset(
+            'assets/icon/knot.svg',
+            colorFilter: ColorFilter.mode(
+              MarkMeTheme.darkBackground,
+              BlendMode.srcIn,
+            ),
+            semanticsLabel: 'Knot Icon',
+            height: 30,
           ),
         );
       },
