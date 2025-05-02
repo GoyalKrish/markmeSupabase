@@ -288,11 +288,7 @@ class _HomeScreenState extends State<HomeScreen> {
               duration: const Duration(milliseconds: 300),
               decoration: BoxDecoration(
                 gradient: MarkMeTheme.backgroundGradient,
-                image: DecorationImage(
-                  image: AssetImage('assets/images/subtle_pattern.png'),
-                  opacity: 0.03,
-                  repeat: ImageRepeat.repeat,
-                ),
+                // Removed the missing asset reference that was causing errors
               ),
               child: Scaffold(
                 backgroundColor: Colors.transparent,
@@ -1034,11 +1030,8 @@ class _HomeScreenState extends State<HomeScreen> {
         blendMode: BlendMode.dstIn,
         child: Container(
           decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/images/subtle_pattern.png'),
-              repeat: ImageRepeat.repeat,
-              opacity: 0.05,
-            ),
+            // Removed the missing asset reference that was causing errors
+            color: Colors.transparent,
           ),
         ),
       ),
@@ -1082,8 +1075,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showSearchModal() {
-    final tabController = DefaultTabController.of(context);
-    final isLobbyTab = tabController?.index == 1;
+    // Get the current tab controller safely using BuildContext
+    final tabController = DefaultTabController.maybeOf(context);
+    final isLobbyTab = tabController?.index == 1 ?? false;
     final searchController = TextEditingController();
     final focusNode = FocusNode();
 
