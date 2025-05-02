@@ -33,6 +33,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late Future<List<String>> _foldersFuture;
   late Future<void> _lobbiesFuture;
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -564,6 +565,46 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 }
 
+                // Filter folders based on search query
+                final filteredFolders = _searchQuery.isEmpty
+                    ? folders
+                    : folders
+                        .where((folder) =>
+                            folder.toLowerCase().contains(_searchQuery))
+                        .toList();
+
+                if (filteredFolders.isEmpty && _searchQuery.isNotEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: 80,
+                          color: MarkMeTheme.primaryYellow.withOpacity(0.3),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'No Matching Folders',
+                          style: GoogleFonts.poppins(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: MarkMeTheme.primaryWhite,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Try a different search term',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: MarkMeTheme.primaryWhite.withOpacity(0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
                 return GridView.builder(
                   padding: EdgeInsets.all(16),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -573,10 +614,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisSpacing: 16,
                     crossAxisSpacing: 16,
                   ),
-                  itemCount: folders.length,
+                  itemCount: filteredFolders.length,
                   physics: const BouncingScrollPhysics(),
                   itemBuilder: (context, index) {
-                    final folder = folders[index];
+                    final folder = filteredFolders[index];
                     return InkWell(
                       borderRadius: BorderRadius.circular(20),
                       onTap: () => _navigateToFolder(context, folder),
@@ -694,20 +735,60 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
 
+        // Filter lobbies based on search query
         final lobbies = lobbyProvider.activeLobbies;
+        final filteredLobbies = _searchQuery.isEmpty
+            ? lobbies
+            : lobbies
+                .where((lobby) =>
+                    lobby.name.toLowerCase().contains(_searchQuery) ||
+                    lobby.id.toLowerCase().contains(_searchQuery))
+                .toList();
 
-        if (lobbies.isEmpty) {
-          return EmptyStateWidget(
-            icon: Icons.group_off,
-            message: 'No Active Lobbies Found',
-            actionText: 'Create New Lobby',
-            onAction: () => Navigator.pushNamed(context, '/create-lobby'),
-            secondaryActionText: 'Refresh',
-            onSecondaryAction: () => lobbyProvider.fetchActiveLobbies(),
-          );
+        if (filteredLobbies.isEmpty) {
+          if (_searchQuery.isEmpty) {
+            return EmptyStateWidget(
+              icon: Icons.group_off,
+              message: 'No Active Lobbies Found',
+              actionText: 'Create New Lobby',
+              onAction: () => Navigator.pushNamed(context, '/create-lobby'),
+              secondaryActionText: 'Refresh',
+              onSecondaryAction: () => lobbyProvider.fetchActiveLobbies(),
+            );
+          } else {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.search_off,
+                    size: 80,
+                    color: MarkMeTheme.primaryYellow.withOpacity(0.3),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'No Matching Lobbies',
+                    style: GoogleFonts.poppins(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: MarkMeTheme.primaryWhite,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Try a different search term',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: MarkMeTheme.primaryWhite.withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
         }
 
-        return _buildLobbyList(lobbies);
+        return _buildLobbyList(filteredLobbies);
       },
     );
   }
@@ -766,6 +847,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildLobbyList(List<Lobby> lobbies) {
+    // Filter lobbies into my rooms and live rooms
     final myRooms = lobbies
         .where((l) => l.hostId == widget.authService.currentUser?.id)
         .toList();
@@ -930,9 +1012,37 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildParallaxBackground() {
-    // Implementation of _buildParallaxBackground method
-    // This method should return a widget that implements the parallax background effect
-    return Container(); // Placeholder return, actual implementation needed
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            MarkMeTheme.primaryYellow.withOpacity(0.15),
+            Colors.transparent,
+          ],
+        ),
+      ),
+      child: ShaderMask(
+        shaderCallback: (rect) {
+          return LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.black, Colors.transparent],
+          ).createShader(Rect.fromLTRB(0, 0, rect.width, rect.height));
+        },
+        blendMode: BlendMode.dstIn,
+        child: Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/subtle_pattern.png'),
+              repeat: ImageRepeat.repeat,
+              opacity: 0.05,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildProfileMenu() {
@@ -972,8 +1082,153 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showSearchModal() {
-    // Implementation of _showSearchModal method
-    // This method should implement the logic to show the search modal
+    final tabController = DefaultTabController.of(context);
+    final isLobbyTab = tabController?.index == 1;
+    final searchController = TextEditingController();
+    final focusNode = FocusNode();
+
+    // Show overlay with animation
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black54,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+              height: MediaQuery.of(context).size.height * 0.9,
+              decoration: BoxDecoration(
+                color: MarkMeTheme.darkBackground,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 16,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  // Search bar
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+                    decoration: BoxDecoration(
+                      color: MarkMeTheme.surfaceDark,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(24),
+                        topRight: Radius.circular(24),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Search ${isLobbyTab ? 'Lobbies' : 'Folders'}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: MarkMeTheme.primaryWhite,
+                              ),
+                            ),
+                            const Spacer(),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              color: MarkMeTheme.primaryWhite,
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: MarkMeTheme.darkBackground,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: MarkMeTheme.primaryYellow.withOpacity(0.3),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: TextField(
+                            controller: searchController,
+                            focusNode: focusNode,
+                            style: TextStyle(color: MarkMeTheme.primaryWhite),
+                            decoration: InputDecoration(
+                              hintText: 'Type to search...',
+                              hintStyle: TextStyle(
+                                color:
+                                    MarkMeTheme.primaryWhite.withOpacity(0.5),
+                              ),
+                              prefixIcon: Icon(
+                                Icons.search,
+                                color: MarkMeTheme.primaryYellow,
+                              ),
+                              suffixIcon: searchController.text.isNotEmpty
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      color: MarkMeTheme.primaryWhite
+                                          .withOpacity(0.7),
+                                      onPressed: () {
+                                        searchController.clear();
+                                        setModalState(() {});
+                                        setState(() {
+                                          _searchQuery = '';
+                                        });
+                                      },
+                                    )
+                                  : null,
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 16,
+                                horizontal: 16,
+                              ),
+                            ),
+                            onChanged: (value) {
+                              setModalState(() {});
+                              setState(() {
+                                _searchQuery = value.toLowerCase();
+                              });
+                            },
+                            autofocus: true,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Content area
+                  Expanded(
+                    child: isLobbyTab
+                        ? _buildLobbyContent(context)
+                        : _buildFolderContent(),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    ).then((_) {
+      // Clear search when modal is closed
+      setState(() {
+        _searchQuery = '';
+      });
+    });
   }
 
   Widget _buildNavItem({
