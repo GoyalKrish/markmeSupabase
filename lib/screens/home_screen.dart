@@ -35,6 +35,13 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<void> _lobbiesFuture;
   String _searchQuery = '';
 
+  // Controller for the search field
+  final TextEditingController _searchController = TextEditingController();
+  // Focus node for the search field
+  final FocusNode _searchFocusNode = FocusNode();
+  // Whether the search bar is expanded
+  bool _isSearchExpanded = false;
+
   @override
   void initState() {
     super.initState();
@@ -42,11 +49,25 @@ class _HomeScreenState extends State<HomeScreen> {
     final lobbyProvider = Provider.of<LobbyProvider>(context, listen: false);
     _lobbiesFuture = lobbyProvider.fetchActiveLobbies();
 
+    // Listen for changes in the search field
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.toLowerCase();
+      });
+    });
+
     if (widget.authService.currentUser == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacementNamed(context, '/login');
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
   }
 
   void _refreshFolders() {
@@ -341,24 +362,117 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                       actions: [
-                        IconButton(
-                          icon: Icon(Icons.search, size: 26),
-                          onPressed: _showSearchModal,
-                          tooltip: 'Search',
+                        // Animated search bar
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          width: _isSearchExpanded
+                              ? MediaQuery.of(context).size.width * 0.5
+                              : 48,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: _isSearchExpanded
+                                ? MarkMeTheme.surfaceDark
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: _isSearchExpanded
+                              ? GestureDetector(
+                                  onTap: () {
+                                    // Prevent the tap from dismissing the search field
+                                    _searchFocusNode.requestFocus();
+                                  },
+                                  child: Focus(
+                                    onFocusChange: (hasFocus) {
+                                      // If focus is lost and text is empty, collapse the search bar
+                                      if (!hasFocus &&
+                                          _searchController.text.isEmpty) {
+                                        setState(() {
+                                          _isSearchExpanded = false;
+                                          _searchQuery = '';
+                                        });
+                                      }
+                                    },
+                                    child: TextField(
+                                      controller: _searchController,
+                                      focusNode: _searchFocusNode,
+                                      style: TextStyle(
+                                          color: MarkMeTheme.primaryWhite),
+                                      textInputAction: TextInputAction.search,
+                                      onSubmitted: (_) {
+                                        // Keep focus on submit
+                                        _searchFocusNode.requestFocus();
+                                      },
+                                      decoration: InputDecoration(
+                                        hintText:
+                                            'Search ${DefaultTabController.of(context).index == 0 ? "folders" : "lobbies"}...',
+                                        hintStyle: TextStyle(
+                                          color: MarkMeTheme.primaryWhite
+                                              .withOpacity(0.5),
+                                        ),
+                                        prefixIcon: Icon(
+                                          Icons.search,
+                                          color: MarkMeTheme.primaryYellow,
+                                          size: 20,
+                                        ),
+                                        suffixIcon: IconButton(
+                                          icon:
+                                              const Icon(Icons.clear, size: 20),
+                                          color: MarkMeTheme.primaryWhite
+                                              .withOpacity(0.7),
+                                          onPressed: () {
+                                            _searchController.clear();
+                                            setState(() {
+                                              _isSearchExpanded = false;
+                                              _searchQuery = '';
+                                            });
+                                            FocusScope.of(context).unfocus();
+                                          },
+                                        ),
+                                        border: InputBorder.none,
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                          vertical: 10,
+                                          horizontal: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : IconButton(
+                                  icon: const Icon(Icons.search, size: 26),
+                                  color: MarkMeTheme.primaryWhite,
+                                  onPressed: () {
+                                    setState(() {
+                                      _isSearchExpanded = true;
+                                    });
+                                    // Focus the search field after animation completes
+                                    Future.delayed(
+                                        const Duration(milliseconds: 300), () {
+                                      _searchFocusNode.requestFocus();
+                                    });
+                                  },
+                                  tooltip: 'Search',
+                                ),
                         ),
                         _buildProfileMenu(),
                       ],
                     ),
                   ),
                 ),
-                body: TabBarView(
-                  physics: const BouncingScrollPhysics(),
-                  children: [
-                    _buildFolderContent(),
-                    _buildLobbyContent(context)
-                  ],
+                body: SafeArea(
+                  child: TabBarView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      _buildFolderContent(),
+                      _buildLobbyContent(context),
+                    ],
+                  ),
                 ),
-                floatingActionButton: _buildFAB(context),
+                floatingActionButton: Padding(
+                  padding:
+                      const EdgeInsets.only(bottom: kBottomNavigationBarHeight),
+                  child: _buildFAB(context),
+                ),
                 bottomNavigationBar: Container(
                   height: kBottomNavigationBarHeight + 40,
                   decoration: BoxDecoration(
@@ -382,6 +496,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         BorderRadius.vertical(top: Radius.circular(28)),
                     child: Consumer<TabController>(
                       builder: (context, tabController, child) {
+                        // Listen for tab changes to update search hint
+                        tabController.addListener(() {
+                          if (_isSearchExpanded) {
+                            // Force rebuild to update hint text
+                            setState(() {});
+                          }
+                        });
+
                         return NavigationBar(
                           height: kBottomNavigationBarHeight,
                           backgroundColor: Colors.transparent,
@@ -1074,155 +1196,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // This method is no longer needed as we've replaced it with the inline search bar
+  // Keeping an empty implementation in case it's referenced elsewhere
   void _showSearchModal() {
-    // Get the current tab controller safely using BuildContext
-    final tabController = DefaultTabController.maybeOf(context);
-    final isLobbyTab = tabController?.index == 1 ?? false;
-    final searchController = TextEditingController();
-    final focusNode = FocusNode();
-
-    // Show overlay with animation
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black54,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-              height: MediaQuery.of(context).size.height * 0.9,
-              decoration: BoxDecoration(
-                color: MarkMeTheme.darkBackground,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
-                    blurRadius: 16,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  // Search bar
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
-                    decoration: BoxDecoration(
-                      color: MarkMeTheme.surfaceDark,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(24),
-                        topRight: Radius.circular(24),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              'Search ${isLobbyTab ? 'Lobbies' : 'Folders'}',
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: MarkMeTheme.primaryWhite,
-                              ),
-                            ),
-                            const Spacer(),
-                            IconButton(
-                              icon: const Icon(Icons.close),
-                              color: MarkMeTheme.primaryWhite,
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: MarkMeTheme.darkBackground,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: MarkMeTheme.primaryYellow.withOpacity(0.3),
-                              width: 1.5,
-                            ),
-                          ),
-                          child: TextField(
-                            controller: searchController,
-                            focusNode: focusNode,
-                            style: TextStyle(color: MarkMeTheme.primaryWhite),
-                            decoration: InputDecoration(
-                              hintText: 'Type to search...',
-                              hintStyle: TextStyle(
-                                color:
-                                    MarkMeTheme.primaryWhite.withOpacity(0.5),
-                              ),
-                              prefixIcon: Icon(
-                                Icons.search,
-                                color: MarkMeTheme.primaryYellow,
-                              ),
-                              suffixIcon: searchController.text.isNotEmpty
-                                  ? IconButton(
-                                      icon: const Icon(Icons.clear),
-                                      color: MarkMeTheme.primaryWhite
-                                          .withOpacity(0.7),
-                                      onPressed: () {
-                                        searchController.clear();
-                                        setModalState(() {});
-                                        setState(() {
-                                          _searchQuery = '';
-                                        });
-                                      },
-                                    )
-                                  : null,
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 16,
-                                horizontal: 16,
-                              ),
-                            ),
-                            onChanged: (value) {
-                              setModalState(() {});
-                              setState(() {
-                                _searchQuery = value.toLowerCase();
-                              });
-                            },
-                            autofocus: true,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Content area
-                  Expanded(
-                    child: isLobbyTab
-                        ? _buildLobbyContent(context)
-                        : _buildFolderContent(),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    ).then((_) {
-      // Clear search when modal is closed
-      setState(() {
-        _searchQuery = '';
-      });
-    });
+    // No longer used - search is now inline in the AppBar
   }
 
   Widget _buildNavItem({

@@ -307,7 +307,7 @@ class _FolderScreenState extends State<FolderScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: TextField(
               decoration: InputDecoration(
                 labelText: 'Search students',
@@ -323,15 +323,21 @@ class _FolderScreenState extends State<FolderScreen> {
               future: _studentsFuture,
               builder: (context, snapshot) {
                 final count = snapshot.hasData ? snapshot.data!.length : 0;
-                return Text(
+                return ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: 40),
+                child: Text(
                   'Total Students: $count',
                   style: Theme.of(context).textTheme.titleLarge,
-                );
+                  maxLines: 1,
+                ),
+              );
               },
             ),
           ),
           Expanded(
-            child: FutureBuilder<List<Student>>(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 80),
+              child: FutureBuilder<List<Student>>(
               future: _studentsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -353,6 +359,7 @@ class _FolderScreenState extends State<FolderScreen> {
                 }
 
                 return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   itemCount: students.length,
                   itemBuilder: (context, index) {
                     final student = students[index];
@@ -396,13 +403,26 @@ class _FolderScreenState extends State<FolderScreen> {
                         _deleteStudent(student, index);
                       },
                       child: ListTile(
-                        title: Text(student.name),
-                        subtitle: Text('ID: ${student.id}'),
-                        trailing: Text(
-                          _getTimeAgo(student.timestamp),
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
+                        title: Text(
+                          student.name,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                        subtitle: Text(
+                          'ID: ${student.id}',
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                        trailing: SizedBox(
+                          width: 80,
+                          child: Text(
+                            _getTimeAgo(student.timestamp),
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ),
                       ),
@@ -412,7 +432,7 @@ class _FolderScreenState extends State<FolderScreen> {
               },
             ),
           ),
-        ],
+      ),],
       ),
     );
   }
@@ -466,4 +486,4 @@ class _FolderScreenState extends State<FolderScreen> {
       ),
     );
   }
-} 
+}
