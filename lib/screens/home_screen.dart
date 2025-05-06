@@ -480,8 +480,7 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ),
                 floatingActionButton: Padding(
-                  padding:
-                      const EdgeInsets.only(bottom: 5),
+                  padding: const EdgeInsets.only(bottom: 5),
                   child: _buildFAB(context),
                 ),
                 bottomNavigationBar: Container(
@@ -555,7 +554,11 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildFolderContent() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+      padding: const EdgeInsets.only(
+        left: 24.0,
+        right: 24.0,
+        top: 16.0,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

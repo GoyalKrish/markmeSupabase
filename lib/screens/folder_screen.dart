@@ -105,7 +105,8 @@ class _FolderScreenState extends State<FolderScreen> {
                     name: nameController.text,
                     id: idController.text,
                   );
-                  await widget.folderService.addStudent(widget.folderName, student);
+                  await widget.folderService
+                      .addStudent(widget.folderName, student);
                   if (context.mounted) {
                     Navigator.pop(context);
                     _refreshStudents();
@@ -129,21 +130,24 @@ class _FolderScreenState extends State<FolderScreen> {
   List<Student> _filterStudents(List<Student> students) {
     if (_searchQuery.isEmpty) return students;
     final query = _searchQuery.toLowerCase();
-    return students.where((student) =>
-      student.name.toLowerCase().contains(query) ||
-      student.id.toLowerCase().contains(query)
-    ).toList();
+    return students
+        .where((student) =>
+            student.name.toLowerCase().contains(query) ||
+            student.id.toLowerCase().contains(query))
+        .toList();
   }
 
   Future<void> _shareFolderData() async {
     try {
-      final students = await widget.folderService.getStudents(widget.folderName);
+      final students =
+          await widget.folderService.getStudents(widget.folderName);
       final csvContent = _generateCsvContent(students);
-      
+
       final directory = await getTemporaryDirectory();
-      final file = File('${directory.path}/${widget.folderName}_attendance.csv');
+      final file =
+          File('${directory.path}/${widget.folderName}_attendance.csv');
       await file.writeAsString(csvContent);
-      
+
       await Share.shareXFiles(
         [XFile(file.path)],
         text: 'Attendance data from ${widget.folderName}',
@@ -162,15 +166,15 @@ class _FolderScreenState extends State<FolderScreen> {
     final now = DateTime.now();
     final date = DateFormat('M/d/yyyy').format(now);
     final time = DateFormat('HH:mm:ss').format(now);
-    
+
     List<String> rows = [
       'Markme :,Attendance Record,',
       'Class,${widget.folderName},',
       'Date,$date,',
       'Time,$time,',
       'Total Students,${students.length},',
-      ',,',  // Empty row
-      'Student ID,Name,Time'  // Headers without trailing comma
+      ',,', // Empty row
+      'Student ID,Name,Time' // Headers without trailing comma
     ];
 
     // Sort students by name if needed
@@ -213,7 +217,8 @@ class _FolderScreenState extends State<FolderScreen> {
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('NFC scanning enabled. Hold cards near device to scan.'),
+            content:
+                Text('NFC scanning enabled. Hold cards near device to scan.'),
             duration: Duration(seconds: 2),
           ),
         );
@@ -252,7 +257,8 @@ class _FolderScreenState extends State<FolderScreen> {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Student with ID $studentId already exists in this folder'),
+          content:
+              Text('Student with ID $studentId already exists in this folder'),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -324,42 +330,38 @@ class _FolderScreenState extends State<FolderScreen> {
               builder: (context, snapshot) {
                 final count = snapshot.hasData ? snapshot.data!.length : 0;
                 return ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: 40),
-                child: Text(
-                  'Total Students: $count',
-                  style: Theme.of(context).textTheme.titleLarge,
-                  maxLines: 1,
-                ),
-              );
+                  constraints: BoxConstraints(maxHeight: 40),
+                  child: Text(
+                    'Total Students: $count',
+                    style: Theme.of(context).textTheme.titleLarge,
+                    maxLines: 1,
+                  ),
+                );
               },
             ),
           ),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 80),
-              child: FutureBuilder<List<Student>>(
+            child: FutureBuilder<List<Student>>(
               future: _studentsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                
+
                 if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
 
                 final students = _filterStudents(snapshot.data ?? []);
-                
+
                 if (students.isEmpty) {
-                  return Center(child: Text(
-                    _searchQuery.isEmpty 
-                      ? 'No students added yet'
-                      : 'No students found for "$_searchQuery"'
-                  ));
+                  return Center(
+                      child: Text(_searchQuery.isEmpty
+                          ? 'No students added yet'
+                          : 'No students found for "$_searchQuery"'));
                 }
 
                 return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   itemCount: students.length,
                   itemBuilder: (context, index) {
                     final student = students[index];
@@ -381,14 +383,17 @@ class _FolderScreenState extends State<FolderScreen> {
                           builder: (BuildContext context) {
                             return AlertDialog(
                               title: const Text('Confirm Delete'),
-                              content: Text('Are you sure you want to remove ${student.name}?'),
+                              content: Text(
+                                  'Are you sure you want to remove ${student.name}?'),
                               actions: <Widget>[
                                 TextButton(
-                                  onPressed: () => Navigator.of(context).pop(false),
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(false),
                                   child: const Text('CANCEL'),
                                 ),
                                 TextButton(
-                                  onPressed: () => Navigator.of(context).pop(true),
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(true),
                                   child: const Text(
                                     'DELETE',
                                     style: TextStyle(color: Colors.red),
@@ -432,17 +437,17 @@ class _FolderScreenState extends State<FolderScreen> {
               },
             ),
           ),
-      ),],
+        ],
       ),
     );
   }
 
   String _getTimeAgo(DateTime? timestamp) {
     if (timestamp == null) return '';
-    
+
     final now = DateTime.now();
     final difference = now.difference(timestamp);
-    
+
     if (difference.inMinutes < 1) {
       return 'just now';
     } else if (difference.inHours < 1) {
@@ -457,16 +462,16 @@ class _FolderScreenState extends State<FolderScreen> {
   Future<void> _deleteStudent(Student student, int index) async {
     // Store the student and index for potential undo
     final students = await widget.folderService.getStudents(widget.folderName);
-    
+
     // Remove the student
     students.removeAt(index);
     await widget.folderService.saveStudents(widget.folderName, students);
-    
+
     // Refresh the list
     _refreshStudents();
 
     if (!context.mounted) return;
-    
+
     // Show snackbar with undo option
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -476,9 +481,11 @@ class _FolderScreenState extends State<FolderScreen> {
           label: 'UNDO',
           onPressed: () async {
             // Restore the student
-            final currentStudents = await widget.folderService.getStudents(widget.folderName);
+            final currentStudents =
+                await widget.folderService.getStudents(widget.folderName);
             currentStudents.insert(index, student);
-            await widget.folderService.saveStudents(widget.folderName, currentStudents);
+            await widget.folderService
+                .saveStudents(widget.folderName, currentStudents);
             _refreshStudents();
           },
         ),
