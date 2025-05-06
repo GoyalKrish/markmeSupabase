@@ -30,7 +30,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   late Future<List<String>> _foldersFuture;
   late Future<void> _lobbiesFuture;
   String _searchQuery = '';
@@ -42,12 +43,26 @@ class _HomeScreenState extends State<HomeScreen> {
   // Whether the search bar is expanded
   bool _isSearchExpanded = false;
 
+  // Animation controller for the search panel
+  late AnimationController _searchPanelController;
+  late Animation<double> _searchPanelAnimation;
+
   @override
   void initState() {
     super.initState();
     _refreshFolders();
     final lobbyProvider = Provider.of<LobbyProvider>(context, listen: false);
     _lobbiesFuture = lobbyProvider.fetchActiveLobbies();
+
+    // Initialize search panel animation controller
+    _searchPanelController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+    _searchPanelAnimation = CurvedAnimation(
+      parent: _searchPanelController,
+      curve: Curves.easeInOut,
+    );
 
     // Listen for changes in the search field
     _searchController.addListener(() {
@@ -67,6 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _searchPanelController.dispose();
     super.dispose();
   }
 
@@ -362,97 +378,23 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                       actions: [
-                        // Animated search bar
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          width: _isSearchExpanded
-                              ? MediaQuery.of(context).size.width * 0.5
-                              : 48,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: _isSearchExpanded
-                                ? MarkMeTheme.surfaceDark
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: _isSearchExpanded
-                              ? GestureDetector(
-                                  onTap: () {
-                                    // Prevent the tap from dismissing the search field
-                                    _searchFocusNode.requestFocus();
-                                  },
-                                  child: Focus(
-                                    onFocusChange: (hasFocus) {
-                                      // If focus is lost and text is empty, collapse the search bar
-                                      if (!hasFocus &&
-                                          _searchController.text.isEmpty) {
-                                        setState(() {
-                                          _isSearchExpanded = false;
-                                          _searchQuery = '';
-                                        });
-                                      }
-                                    },
-                                    child: TextField(
-                                      controller: _searchController,
-                                      focusNode: _searchFocusNode,
-                                      style: TextStyle(
-                                          color: MarkMeTheme.primaryWhite),
-                                      textInputAction: TextInputAction.search,
-                                      onSubmitted: (_) {
-                                        // Keep focus on submit
-                                        _searchFocusNode.requestFocus();
-                                      },
-                                      decoration: InputDecoration(
-                                        hintText:
-                                            'Search ${DefaultTabController.of(context).index == 0 ? "folders" : "lobbies"}...',
-                                        hintStyle: TextStyle(
-                                          color: MarkMeTheme.primaryWhite
-                                              .withOpacity(0.5),
-                                        ),
-                                        prefixIcon: Icon(
-                                          Icons.search,
-                                          color: MarkMeTheme.primaryYellow,
-                                          size: 20,
-                                        ),
-                                        suffixIcon: IconButton(
-                                          icon:
-                                              const Icon(Icons.clear, size: 20),
-                                          color: MarkMeTheme.primaryWhite
-                                              .withOpacity(0.7),
-                                          onPressed: () {
-                                            _searchController.clear();
-                                            setState(() {
-                                              _isSearchExpanded = false;
-                                              _searchQuery = '';
-                                            });
-                                            FocusScope.of(context).unfocus();
-                                          },
-                                        ),
-                                        border: InputBorder.none,
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                          vertical: 10,
-                                          horizontal: 16,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              : IconButton(
-                                  icon: const Icon(Icons.search, size: 26),
-                                  color: MarkMeTheme.primaryWhite,
-                                  onPressed: () {
-                                    setState(() {
-                                      _isSearchExpanded = true;
-                                    });
-                                    // Focus the search field after animation completes
-                                    Future.delayed(
-                                        const Duration(milliseconds: 300), () {
-                                      _searchFocusNode.requestFocus();
-                                    });
-                                  },
-                                  tooltip: 'Search',
-                                ),
+                        // Search icon button
+                        IconButton(
+                          icon: const Icon(Icons.search, size: 26),
+                          color: MarkMeTheme.primaryWhite,
+                          onPressed: () {
+                            setState(() {
+                              _isSearchExpanded = true;
+                            });
+                            // Start the animation to show the search panel
+                            _searchPanelController.forward();
+                            // Focus the search field after animation completes
+                            Future.delayed(const Duration(milliseconds: 250),
+                                () {
+                              _searchFocusNode.requestFocus();
+                            });
+                          },
+                          tooltip: 'Search',
                         ),
                         _buildProfileMenu(),
                       ],
@@ -460,11 +402,80 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 body: SafeArea(
-                  child: TabBarView(
-                    physics: const NeverScrollableScrollPhysics(),
+                  child: Column(
                     children: [
-                      _buildFolderContent(),
-                      _buildLobbyContent(context),
+                      // Animated search panel
+                      SizeTransition(
+                        sizeFactor: _searchPanelAnimation,
+                        axis: Axis.vertical,
+                        child: Container(
+                          width: double.infinity,
+                          color: MarkMeTheme.surfaceDark,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0, vertical: 8.0),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _searchController,
+                                  focusNode: _searchFocusNode,
+                                  style: TextStyle(
+                                      color: MarkMeTheme.primaryWhite),
+                                  textInputAction: TextInputAction.search,
+                                  decoration: InputDecoration(
+                                    hintText:
+                                        'Search ${DefaultTabController.of(context).index == 0 ? "folders" : "lobbies"}...',
+                                    hintStyle: TextStyle(
+                                      color: MarkMeTheme.primaryWhite
+                                          .withOpacity(0.5),
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.search,
+                                      color: MarkMeTheme.primaryYellow,
+                                      size: 20,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    filled: true,
+                                    fillColor: MarkMeTheme.darkBackground,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                      horizontal: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.clear, size: 24),
+                                color:
+                                    MarkMeTheme.primaryWhite.withOpacity(0.7),
+                                onPressed: () {
+                                  // Clear search and collapse panel
+                                  _searchController.clear();
+                                  setState(() {
+                                    _isSearchExpanded = false;
+                                    _searchQuery = '';
+                                  });
+                                  FocusScope.of(context).unfocus();
+                                  _searchPanelController.reverse();
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Main content
+                      Expanded(
+                        child: TabBarView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: [
+                            _buildFolderContent(),
+                            _buildLobbyContent(context),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
