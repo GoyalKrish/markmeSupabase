@@ -102,12 +102,32 @@ class _HomeScreenState extends State<HomeScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Create New Folder'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        backgroundColor: MarkMeTheme.surfaceDark,
+        title: const Text(
+          'Create New Folder',
+          style: TextStyle(
+            color: MarkMeTheme.primaryWhite,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Form(
           key: formKey,
           child: TextFormField(
             controller: folderNameController,
-            decoration: const InputDecoration(labelText: 'Folder Name'),
+            style: TextStyle(color: MarkMeTheme.primaryWhite),
+            decoration: const InputDecoration(
+              labelText: 'Folder Name',
+              labelStyle: TextStyle(color: MarkMeTheme.primaryWhite),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: MarkMeTheme.primaryYellow),
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: MarkMeTheme.primaryYellow),
+              ),
+            ),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter a folder name';
@@ -119,7 +139,10 @@ class _HomeScreenState extends State<HomeScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: MarkMeTheme.primaryWhite),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -160,7 +183,16 @@ class _HomeScreenState extends State<HomeScreen>
                 }
               }
             },
-            child: const Text('Create'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: MarkMeTheme.primaryYellow,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            child: const Text(
+              'Create',
+              style: TextStyle(color: MarkMeTheme.darkBackground),
+            ),
           ),
         ],
       ),
