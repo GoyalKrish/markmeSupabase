@@ -400,7 +400,70 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
             onPressed: _shareLobbyData,
             tooltip: 'Export Attendance',
           ),
-          Switch(value: _nfcEnabled, onChanged: _toggleNFCScanning),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Tooltip(
+              message: _nfcEnabled
+                  ? 'Disable NFC Card Scanning'
+                  : 'Enable NFC Card Scanning',
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(28.0),
+                  onTap: () => _toggleNFCScanning(!_nfcEnabled),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12.0, vertical: 8.0),
+                    decoration: BoxDecoration(
+                      color: _nfcEnabled
+                          ? Theme.of(context).colorScheme.primaryContainer
+                          : Theme.of(context)
+                              .colorScheme
+                              .surfaceVariant
+                              .withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(28.0),
+                      border: Border.all(
+                        color: _nfcEnabled
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context)
+                                .colorScheme
+                                .outline
+                                .withOpacity(0.5),
+                        width: 1.0,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.nfc_rounded,
+                          size: 20,
+                          color: _nfcEnabled
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _nfcEnabled ? 'On' : 'Off',
+                          style:
+                              Theme.of(context).textTheme.labelLarge?.copyWith(
+                                    color: _nfcEnabled
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                    fontWeight: _nfcEnabled
+                                        ? FontWeight.w600
+                                        : FontWeight.normal,
+                                  ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.sync),
             onPressed: () =>
@@ -431,29 +494,73 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Card(
+                    elevation: 0,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surfaceVariant
+                        .withOpacity(0.7),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                      side: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                        width: 1.0,
+                      ),
+                    ),
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(20.0),
                       child: Column(
                         children: [
-                          Text(
-                            'Host Controls',
-                            style: Theme.of(context).textTheme.titleLarge,
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.admin_panel_settings_rounded,
+                                color: Theme.of(context).colorScheme.primary,
+                                size: 24,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Host Controls',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 20),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              _buildStatItem(
-                                Icons.group,
-                                '${currentLobby.memberCount}',
+                              Expanded(
+                                child: _buildEnhancedStatItem(
+                                  context,
+                                  Icons.group_rounded,
+                                  'Members',
+                                  '${currentLobby.memberCount}',
+                                ),
                               ),
-                              _buildStatItem(
-                                Icons.checklist,
-                                '${currentLobby.attendanceCount}',
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildEnhancedStatItem(
+                                  context,
+                                  Icons.checklist_rounded,
+                                  'Checked In',
+                                  '${currentLobby.attendanceCount}',
+                                ),
                               ),
-                              _buildStatItem(
-                                Icons.lock,
-                                currentLobby.entryCode,
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildEnhancedStatItem(
+                                  context,
+                                  Icons.key_rounded,
+                                  'Entry Code',
+                                  currentLobby.entryCode,
+                                ),
                               ),
                             ],
                           ),
@@ -464,62 +571,133 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
                 ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search by name or ID',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                      borderSide: BorderSide.none,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16.0),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
+                      width: 1.0,
                     ),
-                    filled: true,
-                    fillColor: Theme.of(context)
-                        .colorScheme
-                        .surfaceContainerHighest
-                        .withOpacity(0.5),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.info_outline),
-                      onPressed: () => showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Lobby Info'),
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Host ID: ${currentLobby.hostId}'),
-                              Text(
-                                'Entry Code: ${currentLobby.entryCode}',
-                              ),
-                              Text(
-                                'Created: ${DateFormat.yMd().add_jm().format(currentLobby.createdAt)}',
-                              ),
-                            ],
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('Close'),
-                            ),
-                          ],
-                        ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
                       ),
-                    ),
+                    ],
                   ),
-                  onChanged: (value) => setState(() => _searchQuery = value),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Search by name or ID',
+                          hintStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.search_rounded,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16.0),
+                            borderSide: BorderSide.none,
+                          ),
+                          filled: true,
+                          fillColor: Colors.transparent,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20.0,
+                            vertical: 16.0,
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              Icons.info_outline_rounded,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            onPressed: () => showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.info_outline_rounded,
+                                      color: Theme.of(context).colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text('Lobby Info'),
+                                  ],
+                                ),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildInfoRow(
+                                      context,
+                                      'Host ID',
+                                      currentLobby.hostId,
+                                      Icons.person_outline_rounded,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildInfoRow(
+                                      context,
+                                      'Entry Code',
+                                      currentLobby.entryCode,
+                                      Icons.key_rounded,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildInfoRow(
+                                      context,
+                                      'Created',
+                                      DateFormat.yMd().add_jm().format(currentLobby.createdAt),
+                                      Icons.calendar_today_rounded,
+                                    ),
+                                  ],
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text(
+                                      'Close',
+                                      style: TextStyle(
+                                        color: Theme.of(context).colorScheme.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20.0),
+                                ),
+                              ),
+                            ),
+                            tooltip: 'View Lobby Information',
+                          ),
+                        ),
+                        onChanged: (value) => setState(() => _searchQuery = value),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Total Students: ${lobbyProvider.attendanceRecords.length}',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                  ),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.people_alt_outlined,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Total Students: ${lobbyProvider.attendanceRecords.length}',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
+                  ],
                 ),
               ),
               Expanded(
@@ -657,3 +835,77 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
     );
   }
 }
+
+Widget _buildEnhancedStatItem(
+    BuildContext context, IconData icon, String label, String value) {
+  return Container(
+    padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(16.0),
+      border: Border.all(
+        color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
+        width: 1.0,
+      ),
+    ),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          color: Theme.of(context).colorScheme.primary,
+          size: 24,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    ),
+  );
+}
+Widget _buildInfoRow(BuildContext context, String label, String value, IconData icon) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 20,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
