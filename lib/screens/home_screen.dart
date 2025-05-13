@@ -34,6 +34,7 @@ class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late Future<List<String>> _foldersFuture;
   late Future<void> _lobbiesFuture;
+  late PageController _pageController; 
   String _searchQuery = '';
 
   // Controller for the search field
@@ -50,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: 0);
     _refreshFolders();
     final lobbyProvider = Provider.of<LobbyProvider>(context, listen: false);
     _lobbiesFuture = lobbyProvider.fetchActiveLobbies();
@@ -80,6 +82,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void dispose() {
+    _pageController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
     _searchPanelController.dispose();
@@ -319,6 +322,17 @@ class _HomeScreenState extends State<HomeScreen>
       child: Builder(
         builder: (context) {
           final tabController = DefaultTabController.of(context);
+
+          tabController.addListener(() {
+            if (tabController.index != _pageController.page?.round()) {
+              _pageController.animateToPage(
+                tabController.index,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.ease,
+              );
+            }
+          });
+
           return ListenableProvider.value(
             value: tabController,
             child: AnimatedContainer(
@@ -468,12 +482,14 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                       // Main content
                       Expanded(
-                        child: TabBarView(
-                          physics: const NeverScrollableScrollPhysics(),
+                        child: PageView(
                           children: [
                             _buildFolderContent(),
                             _buildLobbyContent(context),
                           ],
+                          onPageChanged: (index) {
+                            tabController.index = index; 
+                          },
                         ),
                       ),
                     ],
