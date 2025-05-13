@@ -298,7 +298,8 @@ class _FolderScreenState extends State<FolderScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: Tooltip(
-              message: _nfcEnabled ? 'Disable NFC Scanning' : 'Enable NFC Scanning',
+              message:
+                  _nfcEnabled ? 'Disable NFC Scanning' : 'Enable NFC Scanning',
               child: Switch(
                 value: _nfcEnabled,
                 onChanged: _toggleNFCScanning,
@@ -332,17 +333,23 @@ class _FolderScreenState extends State<FolderScreen> {
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
-                fillColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+                fillColor: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHighest
+                    .withOpacity(0.5),
               ),
               onChanged: (value) => setState(() => _searchQuery = value),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: FutureBuilder<List<Student>>(
               future: _studentsFuture,
               builder: (context, snapshot) {
-                final count = snapshot.hasData ? _filterStudents(snapshot.data!).length : 0;
+                final count = snapshot.hasData
+                    ? _filterStudents(snapshot.data!).length
+                    : 0;
                 final totalCount = snapshot.hasData ? snapshot.data!.length : 0;
                 String displayText = 'Total Students: $totalCount';
                 if (_searchQuery.isNotEmpty && snapshot.hasData) {
@@ -375,7 +382,8 @@ class _FolderScreenState extends State<FolderScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.error_outline, color: Colors.red[700], size: 48),
+                          Icon(Icons.error_outline,
+                              color: Colors.red[700], size: 48),
                           const SizedBox(height: 16),
                           Text(
                             'Error loading students.',
@@ -404,17 +412,27 @@ class _FolderScreenState extends State<FolderScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            _searchQuery.isEmpty ? Icons.people_outline : Icons.search_off_outlined,
+                            _searchQuery.isEmpty
+                                ? Icons.people_outline
+                                : Icons.search_off_outlined,
                             size: 64,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withOpacity(0.6),
                           ),
                           const SizedBox(height: 20),
                           Text(
                             _searchQuery.isEmpty
                                 ? 'No students added yet.'
                                 : 'No students found for "$_searchQuery"',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
                                 ),
                             textAlign: TextAlign.center,
                           ),
@@ -423,8 +441,14 @@ class _FolderScreenState extends State<FolderScreen> {
                               padding: const EdgeInsets.only(top: 12.0),
                               child: Text(
                                 'Tap the "+" button to add a student.',
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant
+                                          .withOpacity(0.7),
                                     ),
                                 textAlign: TextAlign.center,
                               ),
@@ -436,13 +460,15 @@ class _FolderScreenState extends State<FolderScreen> {
                 }
 
                 return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8.0, vertical: 8.0),
                   itemCount: students.length,
                   itemBuilder: (context, index) {
                     final student = students[index];
                     return Card(
                       elevation: 2.0,
-                      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 8.0, vertical: 6.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12.0),
                       ),
@@ -459,9 +485,13 @@ class _FolderScreenState extends State<FolderScreen> {
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              Icon(Icons.delete_sweep_outlined, color: Colors.white),
+                              Icon(Icons.delete_sweep_outlined,
+                                  color: Colors.white),
                               SizedBox(width: 8),
-                              Text('Remove', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              Text('Remove',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
@@ -495,42 +525,64 @@ class _FolderScreenState extends State<FolderScreen> {
                         onDismissed: (direction) {
                           // Find the original index before filtering for deletion
                           final originalStudents = snapshot.data ?? [];
-                          final originalIndex = originalStudents.indexWhere((s) => s.id == student.id);
+                          final originalIndex = originalStudents
+                              .indexWhere((s) => s.id == student.id);
                           if (originalIndex != -1) {
-                             _deleteStudent(student, originalIndex);
+                            _deleteStudent(student, originalIndex);
                           } else {
                             // Fallback if student not found in original list (should not happen)
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Error: Could not find student to delete.')),
+                              const SnackBar(
+                                  content: Text(
+                                      'Error: Could not find student to delete.')),
                             );
                           }
                         },
                         child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16.0, vertical: 8.0),
                           leading: CircleAvatar(
-                            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primaryContainer,
                             child: Text(
-                              student.name.isNotEmpty ? student.name[0].toUpperCase() : '?',
-                              style: TextStyle(color: Theme.of(context).colorScheme.onPrimaryContainer, fontWeight: FontWeight.bold),
+                              student.name.isNotEmpty
+                                  ? student.name[0].toUpperCase()
+                                  : '?',
+                              style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onPrimaryContainer,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ),
                           title: Text(
                             student.name,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w500),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
                           ),
                           subtitle: Text(
                             'ID: ${student.id}',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
                                 ),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
                           ),
                           trailing: Text(
                             _getTimeAgo(student.timestamp),
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(
                                   color: Theme.of(context).colorScheme.outline,
                                 ),
                             overflow: TextOverflow.ellipsis,
@@ -573,22 +625,25 @@ class _FolderScreenState extends State<FolderScreen> {
     // The way it was called from onDismissed was using the filtered list's index.
     // We need to ensure we are removing the correct student from the source.
 
-    final allStudents = await widget.folderService.getStudents(widget.folderName);
+    final allStudents =
+        await widget.folderService.getStudents(widget.folderName);
     // Find the actual student object in the full list to ensure we have the correct one
     // This is safer than relying on index if the list could have changed elsewhere.
-    final studentToRemove = allStudents.firstWhere((s) => s.id == student.id, orElse: () => student /* fallback, though should be found */);
+    final studentToRemove = allStudents.firstWhere((s) => s.id == student.id,
+        orElse: () => student /* fallback, though should be found */);
     final actualIndex = allStudents.indexOf(studentToRemove);
 
     if (actualIndex == -1) {
-        // This case should ideally not be reached if student was in snapshot.data
-        if (context.mounted) {
-            ScaffoldMessenger.of(context).clearSnackBars();
-            ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Error: Student not found for deletion.')),
-            );
-        }
-        _refreshStudents(); // Refresh to be safe
-        return;
+      // This case should ideally not be reached if student was in snapshot.data
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Error: Student not found for deletion.')),
+        );
+      }
+      _refreshStudents(); // Refresh to be safe
+      return;
     }
 
     // Remove the student using the correct index from the full list
@@ -612,7 +667,11 @@ class _FolderScreenState extends State<FolderScreen> {
             final currentStudents =
                 await widget.folderService.getStudents(widget.folderName);
             // Insert back at the original position if possible, or at the end
-            currentStudents.insert(actualIndex < currentStudents.length ? actualIndex : currentStudents.length, studentToRemove);
+            currentStudents.insert(
+                actualIndex < currentStudents.length
+                    ? actualIndex
+                    : currentStudents.length,
+                studentToRemove);
             await widget.folderService
                 .saveStudents(widget.folderName, currentStudents);
             _refreshStudents();

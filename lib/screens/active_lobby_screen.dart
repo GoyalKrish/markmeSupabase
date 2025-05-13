@@ -10,7 +10,7 @@ import '../services/auth_service.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
-import 'dart:ui';  // Add this import for ImageFilter
+import 'dart:ui'; // Add this import for ImageFilter
 
 class ActiveLobbyScreen extends StatefulWidget {
   final String lobbyId;
@@ -184,7 +184,8 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor.withOpacity(0.9),
               borderRadius: BorderRadius.circular(12.0),
@@ -462,12 +463,20 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
                   ),
                 ),
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
                 child: TextField(
                   decoration: InputDecoration(
-                    labelText: 'Search students',
+                    hintText: 'Search by name or ID',
                     prefixIcon: const Icon(Icons.search),
-                    border: const OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                      borderSide: BorderSide.none,
+                    ),
+                    filled: true,
+                    fillColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest
+                        .withOpacity(0.5),
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.info_outline),
                       onPressed: () => showDialog(
@@ -501,10 +510,16 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'Total Students: ${lobbyProvider.attendanceRecords.length}',
-                  style: Theme.of(context).textTheme.titleLarge,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Total Students: ${lobbyProvider.attendanceRecords.length}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
                 ),
               ),
               Expanded(
@@ -520,14 +535,99 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
   Widget _buildStudentList(List<Map<String, dynamic>> records) {
     final students = _filterStudents(records);
 
+    if (students.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                _searchQuery.isEmpty
+                    ? Icons.people_outline
+                    : Icons.search_off_outlined,
+                size: 64,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurfaceVariant
+                    .withOpacity(0.6),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                _searchQuery.isEmpty
+                    ? 'No students in attendance yet.'
+                    : 'No students found for "$_searchQuery"',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+              if (_searchQuery.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12.0),
+                  child: Text(
+                    'Students will appear here when they join.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant
+                              .withOpacity(0.7),
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
       itemCount: students.length,
       itemBuilder: (context, index) {
         final student = students[index];
-        return ListTile(
-          title: Text(student.name),
-          subtitle: Text('ID: ${student.id}'),
-          trailing: Text(_getTimeAgo(student.timestamp)),
+        return Card(
+          elevation: 2.0,
+          margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          child: ListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            leading: CircleAvatar(
+              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              child: Text(
+                student.name.isNotEmpty ? student.name[0].toUpperCase() : '?',
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onPrimaryContainer),
+              ),
+            ),
+            title: Text(
+              student.name,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            subtitle: Text(
+              'ID: ${student.id}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+            trailing: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  _getTimeAgo(student.timestamp),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );

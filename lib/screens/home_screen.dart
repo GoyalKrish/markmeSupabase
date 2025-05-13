@@ -356,7 +356,7 @@ class _HomeScreenState extends State<HomeScreen>
           final tabController = DefaultTabController.of(context);
 
           // ✅ Assign and add listener only here
-          if (_tabController == null || !_tabController!.hasListeners) { 
+          if (_tabController == null || !_tabController!.hasListeners) {
             _tabController = tabController;
 
             _tabController!.addListener(() {
@@ -399,7 +399,8 @@ class _HomeScreenState extends State<HomeScreen>
                         children: [
                           Hero(
                             tag: 'app_logo',
-                            child: Image.asset('assets/images/markme_icon.png', height: 32),
+                            child: Image.asset('assets/images/markme_icon.png',
+                                height: 32),
                           ),
                           const SizedBox(width: 12),
                           TweenAnimationBuilder<double>(
@@ -435,7 +436,8 @@ class _HomeScreenState extends State<HomeScreen>
                               _isSearchExpanded = true;
                             });
                             _searchPanelController.forward();
-                            Future.delayed(const Duration(milliseconds: 250), () {
+                            Future.delayed(const Duration(milliseconds: 250),
+                                () {
                               _searchFocusNode.requestFocus();
                             });
                           },
@@ -455,19 +457,23 @@ class _HomeScreenState extends State<HomeScreen>
                         child: Container(
                           width: double.infinity,
                           color: MarkMeTheme.surfaceDark,
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0, vertical: 8.0),
                           child: Row(
                             children: [
                               Expanded(
                                 child: TextField(
                                   controller: _searchController,
                                   focusNode: _searchFocusNode,
-                                  style: TextStyle(color: MarkMeTheme.primaryWhite),
+                                  style: TextStyle(
+                                      color: MarkMeTheme.primaryWhite),
                                   textInputAction: TextInputAction.search,
                                   decoration: InputDecoration(
-                                    hintText: 'Search \${DefaultTabController.of(context).index == 0 ? "folders" : "lobbies"}...',
+                                    hintText:
+                                        'Search \${DefaultTabController.of(context).index == 0 ? "folders" : "lobbies"}...',
                                     hintStyle: TextStyle(
-                                      color: MarkMeTheme.primaryWhite.withOpacity(0.5),
+                                      color: MarkMeTheme.primaryWhite
+                                          .withOpacity(0.5),
                                     ),
                                     prefixIcon: Icon(
                                       Icons.search,
@@ -489,7 +495,8 @@ class _HomeScreenState extends State<HomeScreen>
                               ),
                               IconButton(
                                 icon: const Icon(Icons.clear, size: 24),
-                                color: MarkMeTheme.primaryWhite.withOpacity(0.7),
+                                color:
+                                    MarkMeTheme.primaryWhite.withOpacity(0.7),
                                 onPressed: () {
                                   _searchController.clear();
                                   setState(() {
@@ -512,7 +519,8 @@ class _HomeScreenState extends State<HomeScreen>
                             _buildLobbyContent(context),
                           ],
                           onPageChanged: (index) {
-                            if (_tabController != null && _tabController!.hasListeners) {
+                            if (_tabController != null &&
+                                _tabController!.hasListeners) {
                               _tabController!.animateTo(index);
                             }
                           },
@@ -540,10 +548,12 @@ class _HomeScreenState extends State<HomeScreen>
                         offset: Offset(0, -8),
                       ),
                     ],
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(28)),
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(28)),
                     child: Consumer<TabController>(
                       builder: (context, tabController, child) {
                         tabController.addListener(() {
@@ -557,7 +567,8 @@ class _HomeScreenState extends State<HomeScreen>
                           elevation: 0,
                           selectedIndex: tabController.index,
                           animationDuration: Duration(milliseconds: 300),
-                          onDestinationSelected: (index) => tabController.animateTo(index),
+                          onDestinationSelected: (index) =>
+                              tabController.animateTo(index),
                           destinations: [
                             NavigationDestination(
                               icon: Icon(Icons.folder),
