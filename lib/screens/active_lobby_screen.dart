@@ -10,7 +10,9 @@ import '../services/auth_service.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
-import 'dart:ui'; // Add this import for ImageFilter
+import 'dart:ui';
+import '../theme/markme_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ActiveLobbyScreen extends StatefulWidget {
   final String lobbyId;
@@ -66,14 +68,57 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
       if (!await _nfcService.isNFCAvailable()) {
         setState(() => _nfcEnabled = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('NFC is not available on this device')),
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 8),
+                const Text('NFC is not available on this device'),
+              ],
+            ),
+            backgroundColor: Colors.red.shade700,
+          ),
         );
         return;
       }
 
       await _nfcService.startScanning((data) => _handleNFCData(data));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.nfc, color: MarkMeTheme.darkBackground),
+              const SizedBox(width: 8),
+              Text(
+                'NFC Scanning Active',
+                style: TextStyle(color: MarkMeTheme.darkBackground),
+              ),
+            ],
+          ),
+          backgroundColor: MarkMeTheme.primaryYellow,
+          duration: const Duration(seconds: 2),
+        ),
+      );
     } else {
       await _nfcService.stopScanning();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.not_interested, color: Colors.white),
+                const SizedBox(width: 8),
+                Text(
+                  'NFC Scanning Stopped',
+                  style: GoogleFonts.inter(color: Colors.white),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.grey.shade800,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     }
     setState(() => _nfcEnabled = enabled);
   }
@@ -393,19 +438,78 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(currentLobby.name),
+        title: Text(
+          currentLobby.name,
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.share),
             onPressed: _shareLobbyData,
             tooltip: 'Export Attendance',
+            color: MarkMeTheme.primaryWhite.withOpacity(0.9),
           ),
-          Switch(value: _nfcEnabled, onChanged: _toggleNFCScanning),
+          Semantics(
+            label: _nfcEnabled ? 'Stop NFC Scanning' : 'Start NFC Scanning',
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+              decoration: BoxDecoration(
+                color: _nfcEnabled
+                    ? MarkMeTheme.primaryYellow
+                    : MarkMeTheme.surfaceDark,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: _nfcEnabled
+                      ? MarkMeTheme.primaryYellow
+                      : MarkMeTheme.primaryWhite.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(24),
+                  onTap: () => _toggleNFCScanning(!_nfcEnabled),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _nfcEnabled ? Icons.nfc : Icons.nfc_outlined,
+                          color: _nfcEnabled
+                              ? MarkMeTheme.darkBackground
+                              : MarkMeTheme.primaryWhite.withOpacity(0.9),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _nfcEnabled ? 'Active' : 'Inactive',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: _nfcEnabled
+                                ? MarkMeTheme.darkBackground
+                                : MarkMeTheme.primaryWhite.withOpacity(0.9),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.sync),
             onPressed: () =>
                 lobbyProvider.fetchAttendanceRecords(widget.lobbyId),
             tooltip: 'Sync Attendance',
+            color: MarkMeTheme.primaryWhite.withOpacity(0.9),
           ),
         ],
       ),
@@ -431,29 +535,67 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                        color: MarkMeTheme.primaryYellow.withOpacity(0.1),
+                        width: 1,
+                      ),
+                    ),
+                    color: MarkMeTheme.surfaceDark,
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(20.0),
                       child: Column(
                         children: [
-                          Text(
-                            'Host Controls',
-                            style: Theme.of(context).textTheme.titleLarge,
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.admin_panel_settings,
+                                color: MarkMeTheme.primaryYellow,
+                                size: 24,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Host Controls',
+                                style: GoogleFonts.inter(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                  color: MarkMeTheme.primaryWhite,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 20),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
                               _buildStatItem(
                                 Icons.group,
                                 '${currentLobby.memberCount}',
+                                'Members',
+                              ),
+                              Container(
+                                height: 40,
+                                width: 1,
+                                color:
+                                    MarkMeTheme.primaryWhite.withOpacity(0.1),
                               ),
                               _buildStatItem(
-                                Icons.checklist,
+                                Icons.checklist_rtl,
                                 '${currentLobby.attendanceCount}',
+                                'Attendance',
+                              ),
+                              Container(
+                                height: 40,
+                                width: 1,
+                                color:
+                                    MarkMeTheme.primaryWhite.withOpacity(0.1),
                               ),
                               _buildStatItem(
-                                Icons.lock,
+                                Icons.key,
                                 currentLobby.entryCode,
+                                'Entry Code',
                               ),
                             ],
                           ),
@@ -566,7 +708,7 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: Text(
-                    'Students will appear here when they join.',
+                    'You can add students manually or scan their NFC tags.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context)
                               .colorScheme
@@ -647,12 +789,32 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
     super.dispose();
   }
 
-  Widget _buildStatItem(IconData icon, String value) {
+  Widget _buildStatItem(IconData icon, String value, String label) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 28),
+        Icon(
+          icon,
+          color: MarkMeTheme.primaryYellow,
+          size: 24,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: MarkMeTheme.primaryWhite,
+          ),
+        ),
         const SizedBox(height: 4),
-        Text(value, style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            color: MarkMeTheme.primaryWhite.withOpacity(0.7),
+          ),
+        ),
       ],
     );
   }
