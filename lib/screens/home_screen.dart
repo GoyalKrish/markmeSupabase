@@ -34,7 +34,9 @@ class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late Future<List<String>> _foldersFuture;
   late Future<void> _lobbiesFuture;
-  late PageController _pageController; 
+  late PageController _pageController;
+  TabController? _tabController;
+
   String _searchQuery = '';
 
   // Controller for the search field
@@ -55,8 +57,6 @@ class _HomeScreenState extends State<HomeScreen>
     _refreshFolders();
     final lobbyProvider = Provider.of<LobbyProvider>(context, listen: false);
     _lobbiesFuture = lobbyProvider.fetchActiveLobbies();
-
-    // Initialize search panel animation controller
     _searchPanelController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 250),
@@ -65,14 +65,11 @@ class _HomeScreenState extends State<HomeScreen>
       parent: _searchPanelController,
       curve: Curves.easeInOut,
     );
-
-    // Listen for changes in the search field
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text.toLowerCase();
       });
     });
-
     if (widget.authService.currentUser == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacementNamed(context, '/login');
@@ -86,6 +83,9 @@ class _HomeScreenState extends State<HomeScreen>
     _searchController.dispose();
     _searchFocusNode.dispose();
     _searchPanelController.dispose();
+    if (_tabController != null && _tabController!.hasListeners) {
+      _tabController!.removeListener(() {});
+    }
     super.dispose();
   }
 
@@ -323,15 +323,20 @@ class _HomeScreenState extends State<HomeScreen>
         builder: (context) {
           final tabController = DefaultTabController.of(context);
 
-          tabController.addListener(() {
-            if (tabController.index != _pageController.page?.round()) {
-              _pageController.animateToPage(
-                tabController.index,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.ease,
-              );
-            }
-          });
+          // ✅ Assign and add listener only here
+          if (_tabController == null || !_tabController!.hasListeners) { 
+            _tabController = tabController;
+
+            _tabController!.addListener(() {
+              if (_tabController!.index != _pageController.page?.round()) {
+                _pageController.animateToPage(
+                  _tabController!.index,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.ease,
+                );
+              }
+            });
+          }
 
           return ListenableProvider.value(
             value: tabController,
@@ -339,7 +344,6 @@ class _HomeScreenState extends State<HomeScreen>
               duration: const Duration(milliseconds: 300),
               decoration: BoxDecoration(
                 gradient: MarkMeTheme.backgroundGradient,
-                // Removed the missing asset reference that was causing errors
               ),
               child: Scaffold(
                 backgroundColor: Colors.transparent,
@@ -363,8 +367,7 @@ class _HomeScreenState extends State<HomeScreen>
                         children: [
                           Hero(
                             tag: 'app_logo',
-                            child: Image.asset('assets/images/markme_icon.png',
-                                height: 32),
+                            child: Image.asset('assets/images/markme_icon.png', height: 32),
                           ),
                           const SizedBox(width: 12),
                           TweenAnimationBuilder<double>(
@@ -392,7 +395,6 @@ class _HomeScreenState extends State<HomeScreen>
                         ],
                       ),
                       actions: [
-                        // Search icon button
                         IconButton(
                           icon: const Icon(Icons.search, size: 26),
                           color: MarkMeTheme.primaryWhite,
@@ -400,11 +402,8 @@ class _HomeScreenState extends State<HomeScreen>
                             setState(() {
                               _isSearchExpanded = true;
                             });
-                            // Start the animation to show the search panel
                             _searchPanelController.forward();
-                            // Focus the search field after animation completes
-                            Future.delayed(const Duration(milliseconds: 250),
-                                () {
+                            Future.delayed(const Duration(milliseconds: 250), () {
                               _searchFocusNode.requestFocus();
                             });
                           },
@@ -418,30 +417,25 @@ class _HomeScreenState extends State<HomeScreen>
                 body: SafeArea(
                   child: Column(
                     children: [
-                      // Animated search panel
                       SizeTransition(
                         sizeFactor: _searchPanelAnimation,
                         axis: Axis.vertical,
                         child: Container(
                           width: double.infinity,
                           color: MarkMeTheme.surfaceDark,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16.0, vertical: 8.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                           child: Row(
                             children: [
                               Expanded(
                                 child: TextField(
                                   controller: _searchController,
                                   focusNode: _searchFocusNode,
-                                  style: TextStyle(
-                                      color: MarkMeTheme.primaryWhite),
+                                  style: TextStyle(color: MarkMeTheme.primaryWhite),
                                   textInputAction: TextInputAction.search,
                                   decoration: InputDecoration(
-                                    hintText:
-                                        'Search ${DefaultTabController.of(context).index == 0 ? "folders" : "lobbies"}...',
+                                    hintText: 'Search \${DefaultTabController.of(context).index == 0 ? "folders" : "lobbies"}...',
                                     hintStyle: TextStyle(
-                                      color: MarkMeTheme.primaryWhite
-                                          .withOpacity(0.5),
+                                      color: MarkMeTheme.primaryWhite.withOpacity(0.5),
                                     ),
                                     prefixIcon: Icon(
                                       Icons.search,
@@ -463,10 +457,8 @@ class _HomeScreenState extends State<HomeScreen>
                               ),
                               IconButton(
                                 icon: const Icon(Icons.clear, size: 24),
-                                color:
-                                    MarkMeTheme.primaryWhite.withOpacity(0.7),
+                                color: MarkMeTheme.primaryWhite.withOpacity(0.7),
                                 onPressed: () {
-                                  // Clear search and collapse panel
                                   _searchController.clear();
                                   setState(() {
                                     _isSearchExpanded = false;
@@ -480,15 +472,17 @@ class _HomeScreenState extends State<HomeScreen>
                           ),
                         ),
                       ),
-                      // Main content
                       Expanded(
                         child: PageView(
+                          controller: _pageController,
                           children: [
                             _buildFolderContent(),
                             _buildLobbyContent(context),
                           ],
                           onPageChanged: (index) {
-                            tabController.index = index; 
+                            if (_tabController != null && _tabController!.hasListeners) {
+                              _tabController!.animateTo(index);
+                            }
                           },
                         ),
                       ),
@@ -514,47 +508,34 @@ class _HomeScreenState extends State<HomeScreen>
                         offset: Offset(0, -8),
                       ),
                     ],
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(28)),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
                   ),
                   child: ClipRRect(
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(28)),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
                     child: Consumer<TabController>(
                       builder: (context, tabController, child) {
-                        // Listen for tab changes to update search hint
                         tabController.addListener(() {
                           if (_isSearchExpanded) {
-                            // Force rebuild to update hint text
                             setState(() {});
                           }
                         });
-
                         return NavigationBar(
                           height: kBottomNavigationBarHeight,
                           backgroundColor: Colors.transparent,
                           elevation: 0,
                           selectedIndex: tabController.index,
                           animationDuration: Duration(milliseconds: 300),
-                          onDestinationSelected: (index) =>
-                              tabController.animateTo(index),
+                          onDestinationSelected: (index) => tabController.animateTo(index),
                           destinations: [
                             NavigationDestination(
-                              icon: Icon(Icons.folder_outlined),
-                              selectedIcon: Icon(Icons.folder),
+                              icon: Icon(Icons.folder),
                               label: 'Folders',
                             ),
                             NavigationDestination(
-                              icon: Icon(Icons.group_outlined),
-                              selectedIcon: Icon(Icons.group),
+                              icon: Icon(Icons.people),
                               label: 'Lobbies',
                             ),
                           ],
-                          labelBehavior:
-                              NavigationDestinationLabelBehavior.alwaysShow,
-                          indicatorColor:
-                              MarkMeTheme.primaryYellow.withOpacity(0.4),
-                          surfaceTintColor: Colors.transparent,
                         );
                       },
                     ),
