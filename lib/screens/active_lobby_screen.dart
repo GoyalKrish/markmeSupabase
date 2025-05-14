@@ -298,8 +298,7 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
       if (context.mounted) {
         print('Export error: $e');
         context.showErrorNotification(
-          'Export failed: ${e.toString().replaceAll('Exception: ', '')}'
-        );
+            'Export failed: ${e.toString().replaceAll('Exception: ', '')}');
       }
     }
   }
@@ -706,9 +705,6 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
             margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12.0),
-              side: isNewEntry
-                  ? BorderSide(color: MarkMeTheme.primaryYellow, width: 1.5)
-                  : BorderSide.none,
             ),
             child: ListTile(
               contentPadding:
