@@ -737,50 +737,83 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
       );
     }
 
+    // Sort students by timestamp in descending order (newest first)
+    students.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
       itemCount: students.length,
       itemBuilder: (context, index) {
         final student = students[index];
-        return Card(
-          elevation: 2.0,
-          margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-          child: ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            leading: CircleAvatar(
-              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-              child: Text(
-                student.name.isNotEmpty ? student.name[0].toUpperCase() : '?',
-                style: TextStyle(
-                    color: Theme.of(context).colorScheme.onPrimaryContainer),
-              ),
+        final isNewEntry =
+            DateTime.now().difference(student.timestamp).inMinutes < 1;
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          transform: isNewEntry
+              ? (Matrix4.identity()..scale(1.02))
+              : Matrix4.identity(),
+          child: Card(
+            elevation: isNewEntry ? 4.0 : 2.0,
+            margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.0),
+              side: isNewEntry
+                  ? BorderSide(color: MarkMeTheme.primaryYellow, width: 1.5)
+                  : BorderSide.none,
             ),
-            title: Text(
-              student.name,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            subtitle: Text(
-              'ID: ${student.id}',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+            child: ListTile(
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              leading: CircleAvatar(
+                backgroundColor: isNewEntry
+                    ? MarkMeTheme.primaryYellow
+                    : Theme.of(context).colorScheme.primaryContainer,
+                child: Text(
+                  student.name.isNotEmpty ? student.name[0].toUpperCase() : '?',
+                  style: TextStyle(
+                    color: isNewEntry
+                        ? MarkMeTheme.darkBackground
+                        : Theme.of(context).colorScheme.onPrimaryContainer,
+                    fontWeight: FontWeight.w600,
                   ),
-            ),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  _getTimeAgo(student.timestamp),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w500,
-                      ),
                 ),
-              ],
+              ),
+              title: Text(
+                student.name,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight:
+                          isNewEntry ? FontWeight.w600 : FontWeight.normal,
+                    ),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 4),
+                  Text(
+                    'ID: ${student.id}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                ],
+              ),
+              trailing: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    _getTimeAgo(student.timestamp),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: isNewEntry
+                              ? MarkMeTheme.primaryYellow
+                              : Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
