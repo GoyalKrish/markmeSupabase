@@ -452,58 +452,7 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
             tooltip: 'Export Attendance',
             color: MarkMeTheme.primaryWhite.withOpacity(0.9),
           ),
-          Semantics(
-            label: _nfcEnabled ? 'Stop NFC Scanning' : 'Start NFC Scanning',
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-              decoration: BoxDecoration(
-                color: _nfcEnabled
-                    ? MarkMeTheme.primaryYellow
-                    : MarkMeTheme.surfaceDark,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: _nfcEnabled
-                      ? MarkMeTheme.primaryYellow
-                      : MarkMeTheme.primaryWhite.withOpacity(0.2),
-                  width: 1,
-                ),
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(24),
-                  onTap: () => _toggleNFCScanning(!_nfcEnabled),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _nfcEnabled ? Icons.nfc : Icons.nfc_outlined,
-                          color: _nfcEnabled
-                              ? MarkMeTheme.darkBackground
-                              : MarkMeTheme.primaryWhite.withOpacity(0.9),
-                          size: 20,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _nfcEnabled ? 'Active' : 'Inactive',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: _nfcEnabled
-                                ? MarkMeTheme.darkBackground
-                                : MarkMeTheme.primaryWhite.withOpacity(0.9),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          const SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.sync),
             onPressed: () =>
@@ -511,6 +460,7 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
             tooltip: 'Sync Attendance',
             color: MarkMeTheme.primaryWhite.withOpacity(0.9),
           ),
+          const SizedBox(width: 16),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -549,19 +499,82 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
                       child: Column(
                         children: [
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Icon(
-                                Icons.admin_panel_settings,
-                                color: MarkMeTheme.primaryYellow,
-                                size: 24,
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.admin_panel_settings,
+                                    color: MarkMeTheme.primaryYellow,
+                                    size: 24,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Host Controls',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w600,
+                                      color: MarkMeTheme.primaryWhite,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Host Controls',
-                                style: GoogleFonts.inter(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600,
-                                  color: MarkMeTheme.primaryWhite,
+                              Semantics(
+                                label: _nfcEnabled
+                                    ? 'Stop NFC Scanning'
+                                    : 'Start NFC Scanning',
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 6, horizontal: 12),
+                                  decoration: BoxDecoration(
+                                    color: _nfcEnabled
+                                        ? MarkMeTheme.primaryYellow
+                                        : MarkMeTheme.surfaceDark,
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                      color: _nfcEnabled
+                                          ? MarkMeTheme.primaryYellow
+                                          : MarkMeTheme.primaryWhite
+                                              .withOpacity(0.2),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(24),
+                                      onTap: () =>
+                                          _toggleNFCScanning(!_nfcEnabled),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            _nfcEnabled
+                                                ? Icons.nfc
+                                                : Icons.nfc_outlined,
+                                            color: _nfcEnabled
+                                                ? MarkMeTheme.darkBackground
+                                                : MarkMeTheme.primaryWhite
+                                                    .withOpacity(0.9),
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            _nfcEnabled ? 'Active' : 'Inactive',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                              color: _nfcEnabled
+                                                  ? MarkMeTheme.darkBackground
+                                                  : MarkMeTheme.primaryWhite
+                                                      .withOpacity(0.9),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
@@ -708,7 +721,7 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: Text(
-                    'You can add students manually or scan their NFC tags.',
+                    'Scan NFC Tags or enter student manually.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context)
                               .colorScheme
