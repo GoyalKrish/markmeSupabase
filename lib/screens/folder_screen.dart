@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import '../services/nfc_service.dart';
 import 'package:intl/intl.dart';
+import '../utils/notification_extensions.dart';
 
 class FolderScreen extends StatefulWidget {
   final String folderName;
@@ -92,12 +93,8 @@ class _FolderScreenState extends State<FolderScreen> {
                 if (formKey.currentState!.validate()) {
                   // Check for duplicate ID after basic validation
                   if (await _isDuplicate(idController.text)) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('A student with this ID already exists'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                    context.showWarningNotification(
+                        'A student with this ID already exists');
                     return;
                   }
 
@@ -110,12 +107,8 @@ class _FolderScreenState extends State<FolderScreen> {
                   if (context.mounted) {
                     Navigator.pop(context);
                     _refreshStudents();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Added ${student.name} to the list'),
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
+                    context.showSuccessNotification(
+                        'Added ${student.name} to the list');
                   }
                 }
               },
@@ -155,9 +148,7 @@ class _FolderScreenState extends State<FolderScreen> {
       );
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Export failed: $e')),
-        );
+        context.showErrorNotification('Export failed: $e');
       }
     }
   }
@@ -202,12 +193,7 @@ class _FolderScreenState extends State<FolderScreen> {
       if (!await _nfcService.isNFCAvailable()) {
         setState(() => _nfcEnabled = false);
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('NFC is not available on this device'),
-            duration: Duration(seconds: 2),
-          ),
-        );
+        context.showErrorNotification('NFC is not available on this device');
         return;
       }
 
@@ -215,19 +201,12 @@ class _FolderScreenState extends State<FolderScreen> {
         await _nfcService.startScanning(_handleNFCData);
         setState(() => _nfcEnabled = true);
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content:
-                Text('NFC scanning enabled. Hold cards near device to scan.'),
-            duration: Duration(seconds: 2),
-          ),
-        );
+        context.showInfoNotification(
+            'NFC scanning enabled. Hold cards near device to scan.');
       } catch (e) {
         setState(() => _nfcEnabled = false);
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error enabling NFC: $e')),
-        );
+        context.showErrorNotification('Error enabling NFC: $e');
       }
     } else {
       await _nfcService.stopScanning();
@@ -243,25 +222,16 @@ class _FolderScreenState extends State<FolderScreen> {
     String name = scannedData['Block 4'] ?? '';
 
     if (studentId.isEmpty || name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Invalid card data: Missing student information'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      context.showErrorNotification(
+          'Invalid card data: Missing student information');
       return;
     }
 
     // Check for duplicate ID
     if (await _isDuplicate(studentId)) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content:
-              Text('Student with ID $studentId already exists in this folder'),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      context.showWarningNotification(
+          'Student with ID $studentId already exists in this folder');
       return;
     }
 
@@ -275,12 +245,7 @@ class _FolderScreenState extends State<FolderScreen> {
     _refreshStudents();
 
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Added $name (ID: $studentId) to the list'),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    context.showSuccessNotification('Added $name (ID: $studentId) to the list');
   }
 
   @override

@@ -15,6 +15,7 @@ import './create_lobby_screen.dart';
 import '../theme/markme_theme.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../utils/notification_extensions.dart';
 
 class HomeScreen extends StatefulWidget {
   final AuthService authService;
@@ -155,14 +156,8 @@ class _HomeScreenState extends State<HomeScreen>
                 );
                 if (exists) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'A folder with this name already exists',
-                        ),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                    context.showWarningNotification(
+                        'A folder with this name already exists');
                   }
                   return;
                 }

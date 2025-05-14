@@ -8,6 +8,8 @@ import '../services/folder_service.dart';
 import 'package:provider/provider.dart';
 import '../services/lobby_service.dart';
 import '../providers/lobby_provider.dart';
+import '../services/notification_service.dart';
+import '../components/notification_overlay.dart';
 import 'screens/create_lobby_screen.dart';
 import 'screens/active_lobby_screen.dart';
 import 'theme/markme_theme.dart';
@@ -33,6 +35,7 @@ void main() async {
         Provider(create: (_) => FolderService()),
         Provider(create: (_) => LobbyService()),
         ChangeNotifierProvider(create: (_) => LobbyProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationService()),
       ],
       child: const MyApp(),
     ),
@@ -45,17 +48,20 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
-    
+
+    return NotificationOverlay(
+      child: _buildMaterialApp(authService, context),
+    );
+  }
+
+  Widget _buildMaterialApp(AuthService authService, BuildContext context) {
     authService.authStateChanges.listen((event) async {
       final session = event.session;
       if (session != null && await authService.isUserBanned()) {
         await authService.signOut();
         if (context.mounted) {
           Navigator.pushNamedAndRemoveUntil(
-            context, 
-            '/login', 
-            (route) => false
-          );
+              context, '/login', (route) => false);
         }
       }
     });

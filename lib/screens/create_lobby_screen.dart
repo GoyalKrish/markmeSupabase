@@ -4,6 +4,7 @@ import '../services/lobby_service.dart';
 import '../providers/lobby_provider.dart';
 import '../theme/markme_theme.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../utils/notification_extensions.dart';
 
 class CreateLobbyScreen extends StatefulWidget {
   const CreateLobbyScreen({super.key});
@@ -18,22 +19,20 @@ class _CreateLobbyScreenState extends State<CreateLobbyScreen> {
 
   Future<void> _createLobby() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     final lobbyService = context.read<LobbyService>();
     final lobbyProvider = context.read<LobbyProvider>();
-    
+
     try {
       final lobby = await lobbyService.createLobby(_nameController.text);
       await lobbyProvider.initializeRealtime(lobby['id'] as String);
       Navigator.pushReplacementNamed(
-        context, 
+        context,
         '/active-lobby',
         arguments: lobby['id'] as String,
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error creating lobby: ${e.toString()}')),
-      );
+      context.showErrorNotification('Error creating lobby: ${e.toString()}');
     }
   }
 
@@ -94,7 +93,8 @@ class _CreateLobbyScreenState extends State<CreateLobbyScreen> {
                       errorBorder: InputBorder.none,
                       focusedErrorBorder: InputBorder.none,
                     ),
-                    validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
+                    validator: (value) =>
+                        value?.isEmpty ?? true ? 'Required' : null,
                   ),
                 ),
                 SizedBox(height: 32),

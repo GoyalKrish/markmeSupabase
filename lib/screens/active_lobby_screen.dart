@@ -13,6 +13,7 @@ import 'dart:io';
 import 'dart:ui';
 import '../theme/markme_theme.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../utils/notification_extensions.dart';
 
 class ActiveLobbyScreen extends StatefulWidget {
   final String lobbyId;
@@ -67,57 +68,16 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
     if (enabled) {
       if (!await _nfcService.isNFCAvailable()) {
         setState(() => _nfcEnabled = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.error_outline, color: Colors.white),
-                const SizedBox(width: 8),
-                const Text('NFC is not available on this device'),
-              ],
-            ),
-            backgroundColor: Colors.red.shade700,
-          ),
-        );
+        context.showErrorNotification('NFC is not available on this device');
         return;
       }
 
       await _nfcService.startScanning((data) => _handleNFCData(data));
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.nfc, color: MarkMeTheme.darkBackground),
-              const SizedBox(width: 8),
-              Text(
-                'NFC Scanning Active',
-                style: TextStyle(color: MarkMeTheme.darkBackground),
-              ),
-            ],
-          ),
-          backgroundColor: MarkMeTheme.primaryYellow,
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      context.showInfoNotification('NFC Scanning Active');
     } else {
       await _nfcService.stopScanning();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.not_interested, color: Colors.white),
-                const SizedBox(width: 8),
-                Text(
-                  'NFC Scanning Stopped',
-                  style: GoogleFonts.inter(color: Colors.white),
-                ),
-              ],
-            ),
-            backgroundColor: Colors.grey.shade800,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        context.showInfoNotification('NFC Scanning Stopped');
       }
     }
     setState(() => _nfcEnabled = enabled);
@@ -133,13 +93,9 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
     try {
       await lobbyService.addAttendanceRecord(widget.lobbyId, student);
       context.read<LobbyProvider>().fetchAttendanceRecords(widget.lobbyId);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Marked attendance for ${student.name}')),
-      );
+      context.showSuccessNotification('Marked attendance for ${student.name}');
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error marking attendance: $e')));
+      context.showErrorNotification('Error marking attendance: $e');
     }
   }
 
@@ -200,13 +156,8 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
                   Navigator.pop(
                     context,
                   ); // Close dialog before showing error
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        e.toString().replaceAll('Exception: ', ''),
-                      ),
-                      duration: const Duration(seconds: 0),
-                    ),
+                  context.showErrorNotification(
+                    e.toString().replaceAll('Exception: ', ''),
                   );
                 }
               }
@@ -283,9 +234,7 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
       if (attendanceRecords.isEmpty) {
         overlayEntry.remove();
         if (context.mounted) {
-          scaffold.showSnackBar(
-            const SnackBar(content: Text('No attendance records to export')),
-          );
+          context.showInfoNotification('No attendance records to export');
         }
         return;
       }
@@ -348,10 +297,8 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
 
       if (context.mounted) {
         print('Export error: $e');
-        scaffold.showSnackBar(
-          SnackBar(
-              content: Text(
-                  'Export failed: ${e.toString().replaceAll('Exception: ', '')}')),
+        context.showErrorNotification(
+          'Export failed: ${e.toString().replaceAll('Exception: ', '')}'
         );
       }
     }
