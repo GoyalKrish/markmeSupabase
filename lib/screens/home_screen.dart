@@ -198,14 +198,132 @@ class _HomeScreenState extends State<HomeScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('About MarkMe'),
-        content: const Text(
-          'MarkMe is an attendance taking app designed to help you manage class attendance easily .\n\nVersion: 1.0.0\ndeveloped by: Krish Goyal & Aditya Pandey\nContact us at : in.markme@gmail.com',
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        backgroundColor: MarkMeTheme.surfaceDark,
+        title: Row(
+          children: [
+            Image.asset('assets/images/markme_icon.png', height: 28),
+            const SizedBox(width: 12),
+            Text(
+              'About MarkMe',
+              style: GoogleFonts.poppins(
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                color: MarkMeTheme.primaryYellow,
+              ),
+            ),
+          ],
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        content: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.6,
+            maxWidth: MediaQuery.of(context).size.width * 0.8,
+          ),
+          child: SingleChildScrollView(
+            child: Container(
+              decoration: BoxDecoration(
+                color: MarkMeTheme.darkBackground.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'MarkMe is an attendance taking app designed to help you manage class attendance easily.',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: MarkMeTheme.primaryWhite,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: MarkMeTheme.primaryYellow.withOpacity(0.8),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Version: 1.0.0',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          color: MarkMeTheme.primaryWhite.withOpacity(0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.people_outline,
+                        color: MarkMeTheme.primaryYellow.withOpacity(0.8),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Developed by: Krish Goyal & Aditya Pandey',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: MarkMeTheme.primaryWhite.withOpacity(0.9),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.email_outlined,
+                        color: MarkMeTheme.primaryYellow.withOpacity(0.8),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Contact us at: in.markme@gmail.com',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: MarkMeTheme.primaryWhite.withOpacity(0.9),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: MarkMeTheme.primaryYellow,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              elevation: 2,
+            ),
+            child: Text(
+              'Close',
+              style: GoogleFonts.inter(
+                color: MarkMeTheme.darkBackground,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -239,78 +357,89 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ],
         ),
-        content: Container(
-          decoration: BoxDecoration(
-            color: MarkMeTheme.darkBackground.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        content: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.6,
+            maxWidth: MediaQuery.of(context).size.width * 0.8,
           ),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+          child: SingleChildScrollView(
+            child: Container(
+              decoration: BoxDecoration(
+                color: MarkMeTheme.darkBackground.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.email_outlined,
-                    color: MarkMeTheme.primaryYellow.withOpacity(0.8),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Email: ${user?.email ?? 'N/A'}',
-                      style: GoogleFonts.inter(
-                        color: MarkMeTheme.primaryWhite,
-                        fontSize: 14,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.email_outlined,
+                        color: MarkMeTheme.primaryYellow.withOpacity(0.8),
+                        size: 20,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: SelectableText(
+                          'Email: ${user?.email ?? 'N/A'}',
+                          style: GoogleFonts.inter(
+                            color: MarkMeTheme.primaryWhite,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        color: MarkMeTheme.primaryYellow.withOpacity(0.8),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Registered: ${user?.createdAt != null ? DateFormat('yyyy-MM-dd – HH:mm').format(DateTime.parse(user!.createdAt).toLocal()) : 'N/A'}',
+                          style: GoogleFonts.inter(
+                            color: MarkMeTheme.primaryWhite,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.badge_outlined,
+                        color: MarkMeTheme.primaryYellow.withOpacity(0.8),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: SelectableText(
+                          'User ID: ${user?.id ?? 'N/A'}',
+                          style: GoogleFonts.inter(
+                            color: MarkMeTheme.primaryWhite,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Icon(
-                    Icons.calendar_today_outlined,
-                    color: MarkMeTheme.primaryYellow.withOpacity(0.8),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Registered: ${user?.createdAt != null ? DateFormat('yyyy-MM-dd – HH:mm').format(DateTime.parse(user!.createdAt).toLocal()) : 'N/A'}',
-                      style: GoogleFonts.inter(
-                        color: MarkMeTheme.primaryWhite,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Icon(
-                    Icons.badge_outlined,
-                    color: MarkMeTheme.primaryYellow.withOpacity(0.8),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'User ID: ${user?.id ?? 'N/A'}',
-                      style: GoogleFonts.inter(
-                        color: MarkMeTheme.primaryWhite,
-                        fontSize: 14,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
         actions: [
@@ -340,21 +469,38 @@ class _HomeScreenState extends State<HomeScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(folder),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        backgroundColor: MarkMeTheme.surfaceDark,
+        title: Text(
+          folder,
+          style: GoogleFonts.inter(
+            color: MarkMeTheme.primaryWhite,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.edit),
-              title: const Text('Edit'),
+              leading: Icon(Icons.edit, color: MarkMeTheme.primaryYellow),
+              title: Text(
+                'Edit',
+                style: GoogleFonts.inter(color: MarkMeTheme.primaryWhite),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _showEditFolderDialog(context, folder);
               },
             ),
             ListTile(
-              leading: const Icon(Icons.delete),
-              title: const Text('Delete'),
+              leading: Icon(Icons.delete, color: Colors.redAccent),
+              title: Text(
+                'Delete',
+                style: GoogleFonts.inter(color: MarkMeTheme.primaryWhite),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _showDeleteConfirmationDialog(context, folder);
@@ -373,12 +519,34 @@ class _HomeScreenState extends State<HomeScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Edit Folder'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        backgroundColor: MarkMeTheme.surfaceDark,
+        title: Text(
+          'Edit Folder',
+          style: GoogleFonts.inter(
+            color: MarkMeTheme.primaryWhite,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
         content: Form(
           key: formKey,
           child: TextFormField(
             controller: folderNameController,
-            decoration: const InputDecoration(labelText: 'Folder Name'),
+            style: TextStyle(color: MarkMeTheme.primaryWhite),
+            decoration: InputDecoration(
+              labelText: 'Folder Name',
+              labelStyle:
+                  TextStyle(color: MarkMeTheme.primaryWhite.withOpacity(0.8)),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: MarkMeTheme.primaryYellow),
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: MarkMeTheme.primaryYellow),
+              ),
+            ),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter a folder name';
@@ -390,7 +558,10 @@ class _HomeScreenState extends State<HomeScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.inter(color: MarkMeTheme.primaryWhite),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -403,7 +574,20 @@ class _HomeScreenState extends State<HomeScreen>
                 }
               }
             },
-            child: const Text('Save'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: MarkMeTheme.primaryYellow,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              elevation: 2,
+            ),
+            child: Text(
+              'Save',
+              style: GoogleFonts.inter(
+                color: MarkMeTheme.darkBackground,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -414,12 +598,39 @@ class _HomeScreenState extends State<HomeScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Folder'),
-        content: Text('Are you sure you want to delete "$folder"?'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        backgroundColor: MarkMeTheme.surfaceDark,
+        title: Text(
+          'Delete Folder',
+          style: GoogleFonts.inter(
+            color: MarkMeTheme.primaryWhite,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        content: Container(
+          decoration: BoxDecoration(
+            color: MarkMeTheme.darkBackground.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            'Are you sure you want to delete "$folder"?',
+            style: GoogleFonts.inter(
+              color: MarkMeTheme.primaryWhite,
+              fontSize: 14,
+            ),
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.inter(color: MarkMeTheme.primaryWhite),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -429,8 +640,20 @@ class _HomeScreenState extends State<HomeScreen>
                 _refreshFolders();
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              elevation: 2,
+            ),
+            child: Text(
+              'Delete',
+              style: GoogleFonts.inter(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
