@@ -217,24 +217,119 @@ class _HomeScreenState extends State<HomeScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('User Profile'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        backgroundColor: MarkMeTheme.surfaceDark,
+        title: Row(
           children: [
-            Text('Email: ${user?.email ?? 'N/A'}'),
-            const SizedBox(height: 8),
-            Text(
-              'Registered: ${user?.createdAt != null ? DateFormat('yyyy-MM-dd – HH:mm').format(DateTime.parse(user!.createdAt).toLocal()) : 'N/A'}',
+            Icon(
+              Icons.account_circle,
+              color: MarkMeTheme.primaryYellow,
+              size: 28,
             ),
-            const SizedBox(height: 8),
-            Text('User ID: ${user?.id ?? 'N/A'}'),
+            const SizedBox(width: 12),
+            Text(
+              'User Profile',
+              style: GoogleFonts.inter(
+                color: MarkMeTheme.primaryWhite,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
           ],
         ),
+        content: Container(
+          decoration: BoxDecoration(
+            color: MarkMeTheme.darkBackground.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.email_outlined,
+                    color: MarkMeTheme.primaryYellow.withOpacity(0.8),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Email: ${user?.email ?? 'N/A'}',
+                      style: GoogleFonts.inter(
+                        color: MarkMeTheme.primaryWhite,
+                        fontSize: 14,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Icon(
+                    Icons.calendar_today_outlined,
+                    color: MarkMeTheme.primaryYellow.withOpacity(0.8),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Registered: ${user?.createdAt != null ? DateFormat('yyyy-MM-dd – HH:mm').format(DateTime.parse(user!.createdAt).toLocal()) : 'N/A'}',
+                      style: GoogleFonts.inter(
+                        color: MarkMeTheme.primaryWhite,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Icon(
+                    Icons.badge_outlined,
+                    color: MarkMeTheme.primaryYellow.withOpacity(0.8),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'User ID: ${user?.id ?? 'N/A'}',
+                      style: GoogleFonts.inter(
+                        color: MarkMeTheme.primaryWhite,
+                        fontSize: 14,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: MarkMeTheme.primaryYellow,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              elevation: 2,
+            ),
+            child: Text(
+              'Close',
+              style: GoogleFonts.inter(
+                color: MarkMeTheme.darkBackground,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -1210,38 +1305,107 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildProfileMenu() {
-    // Implementation of _buildProfileMenu method
-    // This method should return a widget that implements the profile menu
-    return PopupMenuButton(
-      icon: const Icon(Icons.more_vert),
-      tooltip: 'More options',
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          child: const Text('Profile'),
-          onTap: () => _showUserDialog(context),
+    return Theme(
+      data: Theme.of(context).copyWith(
+        // Custom popup menu theme
+        popupMenuTheme: PopupMenuThemeData(
+          color: MarkMeTheme.surfaceDark,
+          elevation: 8,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+                color: MarkMeTheme.primaryYellow.withOpacity(0.1), width: 1),
+          ),
         ),
-        PopupMenuItem(
-          child: const Text('About'),
-          onTap: () => _showAboutDialog(context),
+      ),
+      child: PopupMenuButton(
+        icon: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+                color: MarkMeTheme.primaryYellow.withOpacity(0.5), width: 1.5),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(2.0),
+            child: Icon(
+              Icons.person_rounded,
+              color: MarkMeTheme.primaryYellow,
+              size: 24,
+            ),
+          ),
         ),
-        PopupMenuItem(
-          child: const Text('Logout'),
-          onTap: () async {
-            try {
-              await widget.authService.signOut();
-              if (context.mounted) {
-                Navigator.pushReplacementNamed(context, '/login');
+        offset: const Offset(0, 56),
+        tooltip: 'Profile options',
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            height: 48,
+            child: Row(
+              children: [
+                Icon(Icons.person_outline,
+                    color: MarkMeTheme.primaryYellow, size: 20),
+                const SizedBox(width: 12),
+                Text(
+                  'Profile',
+                  style: GoogleFonts.poppins(
+                    color: MarkMeTheme.primaryWhite,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            onTap: () => _showUserDialog(context),
+          ),
+          PopupMenuItem(
+            height: 48,
+            child: Row(
+              children: [
+                Icon(Icons.info_outline,
+                    color: MarkMeTheme.primaryYellow, size: 20),
+                const SizedBox(width: 12),
+                Text(
+                  'About',
+                  style: GoogleFonts.poppins(
+                    color: MarkMeTheme.primaryWhite,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            onTap: () => _showAboutDialog(context),
+          ),
+          PopupMenuItem(
+            height: 48,
+            child: Row(
+              children: [
+                Icon(Icons.logout_rounded, color: Colors.redAccent, size: 20),
+                const SizedBox(width: 12),
+                Text(
+                  'Logout',
+                  style: GoogleFonts.poppins(
+                    color: MarkMeTheme.primaryWhite,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            onTap: () async {
+              try {
+                await widget.authService.signOut();
+                if (context.mounted) {
+                  Navigator.pushReplacementNamed(context, '/login');
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  context.showErrorNotification('Logout failed: $e');
+                }
               }
-            } catch (e) {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Logout failed: $e')),
-                );
-              }
-            }
-          },
-        ),
-      ],
+            },
+          ),
+        ],
+      ),
     );
   }
 
