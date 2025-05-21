@@ -1614,17 +1614,73 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ],
             ),
-            onTap: () async {
-              try {
-                await widget.authService.signOut();
-                if (context.mounted) {
-                  Navigator.pushReplacementNamed(context, '/login');
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  context.showErrorNotification('Logout failed: $e');
-                }
-              }
+            onTap: () {
+              // Show logout confirmation dialog
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  backgroundColor: MarkMeTheme.surfaceDark,
+                  title: Text(
+                    'Confirm Logout',
+                    style: GoogleFonts.inter(
+                      color: MarkMeTheme.primaryWhite,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+                  ),
+                  content: Text(
+                    'Are you sure you want to logout?',
+                    style: GoogleFonts.inter(
+                      color: MarkMeTheme.primaryWhite,
+                      fontSize: 16,
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        'Cancel',
+                        style: GoogleFonts.inter(
+                          color: MarkMeTheme.primaryWhite,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        Navigator.pop(context); // Close dialog
+                        try {
+                          await widget.authService.signOut();
+                          if (context.mounted) {
+                            Navigator.pushReplacementNamed(context, '/login');
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            context.showErrorNotification('Logout failed: $e');
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        elevation: 2,
+                      ),
+                      child: Text(
+                        'Logout',
+                        style: GoogleFonts.inter(
+                          color: MarkMeTheme.primaryWhite,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
             },
           ),
         ],
