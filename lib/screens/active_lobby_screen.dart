@@ -170,137 +170,161 @@ class _ActiveLobbyScreenState extends State<ActiveLobbyScreen> {
   }
 
   Future<void> _shareLobbyData() async {
-    // Show loading indicator
-    if (!context.mounted) return;
-    final scaffold = ScaffoldMessenger.of(context);
-    final overlayEntry = OverlayEntry(
-      builder: (context) => Container(
-        color: Colors.black45,
-        alignment: Alignment.center,
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-          child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(12.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 10.0,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 48,
-                  height: 48,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Theme.of(context).colorScheme.primary,
-                    ),
+  // Show dialog to choose export type
+  final exportType = await showDialog<String>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Export Attendance'),
+      content: const Text('Choose export format:'),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.of(context).pop('simple'),
+            child: const Text('Simple Export'),
+          ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop('ezone'),
+          child: const Text('Export to Ezone'),
+        ),
+      ],
+    ),
+  );
+
+  if (exportType == null) return; // User dismissed dialog
+
+      // Handle export type
+      final isEzoneExport = exportType == 'ezone';
+
+  // Now proceed with export
+  if (!context.mounted) return;
+  final overlayEntry = OverlayEntry(
+    builder: (context) => Container(
+      color: Colors.black45,
+      alignment: Alignment.center,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(12.0),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 10.0,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary,
                   ),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'Preparing export...',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Preparing export...',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
+            ],
           ),
         ),
       ),
-    );
+    ),
+  );
 
-    try {
-      Overlay.of(context).insert(overlayEntry);
+  try {
+    Overlay.of(context).insert(overlayEntry);
+    final lobbyProvider = Provider.of<LobbyProvider>(context, listen: false);
+    await lobbyProvider.fetchAttendanceRecords(widget.lobbyId);
+    await lobbyProvider.fetchLobbyDetails(widget.lobbyId);
+    final attendanceRecords = lobbyProvider.attendanceRecords;
 
-      final lobbyProvider = Provider.of<LobbyProvider>(context, listen: false);
-
-      // Refresh data to ensure we have the latest
-      await lobbyProvider.fetchAttendanceRecords(widget.lobbyId);
-      await lobbyProvider.fetchLobbyDetails(widget.lobbyId);
-
-      final attendanceRecords = lobbyProvider.attendanceRecords;
-
-      if (attendanceRecords.isEmpty) {
-        overlayEntry.remove();
-        if (context.mounted) {
-          context.showInfoNotification('No attendance records to export');
-        }
-        return;
-      }
-
-      // Try multiple approaches to get the lobby name
-      String lobbyName = 'Unnamed Lobby';
-
-      // Approach 1: Get from currentLobby in provider
-      final currentLobby = lobbyProvider.currentLobby;
-      if (currentLobby != null && currentLobby['name'] != null) {
-        lobbyName = currentLobby['name'] as String;
-      }
-      // Approach 2: Try to find in activeLobbies
-      else {
-        final matchingLobby = lobbyProvider.activeLobbies.firstWhere(
-          (lobby) => lobby.id == widget.lobbyId,
-          orElse: () => Lobby(
-            id: widget.lobbyId,
-            name: 'Lobby-${widget.lobbyId.substring(0, 6)}',
-            entryCode: '',
-            hostId: '',
-            active: true,
-            createdAt: DateTime.now(),
-            memberCount: 0,
-            attendanceCount: attendanceRecords.length,
-          ),
-        );
-
-        if (matchingLobby.name.isNotEmpty) {
-          lobbyName = matchingLobby.name;
-        }
-      }
-
-      // Generate CSV content
-      final csvContent = _generateCsvContent(attendanceRecords, lobbyName);
-      if (csvContent.isEmpty) {
-        throw Exception('Failed to generate CSV content');
-      }
-
-      // Create temporary file
-      final directory = await getTemporaryDirectory();
-      final sanitizedName = lobbyName.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
-      final file = File('${directory.path}/${sanitizedName}_attendance.csv');
-      await file.writeAsString(csvContent);
-
-      // Remove the loading indicator
+    if (attendanceRecords.isEmpty) {
       overlayEntry.remove();
-
-      if (!context.mounted) return;
-
-      // Share the file
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        text: 'Attendance data from $lobbyName',
-        subject: 'Attendance Report - $lobbyName',
-      );
-    } catch (e) {
-      // Make sure to remove the overlay even if there's an error
-      overlayEntry.remove();
-
       if (context.mounted) {
-        print('Export error: $e');
-        context.showErrorNotification(
-            'Export failed: ${e.toString().replaceAll('Exception: ', '')}');
+        context.showInfoNotification('No attendance records to export');
+      }
+      return;
+    }
+
+    // Get lobby name
+    String lobbyName = 'Unnamed Lobby';
+    final currentLobby = lobbyProvider.currentLobby;
+    if (currentLobby != null && currentLobby['name'] != null) {
+      lobbyName = currentLobby['name'] as String;
+    } else {
+      final matchingLobby = lobbyProvider.activeLobbies.firstWhere(
+        (lobby) => lobby.id == widget.lobbyId,
+        orElse: () => Lobby(
+          id: widget.lobbyId,
+          name: 'Lobby-${widget.lobbyId.substring(0, 6)}',
+          entryCode: '',
+          hostId: '',
+          active: true,
+          createdAt: DateTime.now(),
+          memberCount: 0,
+          attendanceCount: attendanceRecords.length,
+        ),
+      );
+      if (matchingLobby.name.isNotEmpty) {
+        lobbyName = matchingLobby.name;
       }
     }
+
+    // Generate CSV content based on export type
+    String csvContent;
+    String fileNameSuffix = '';
+
+    if (isEzoneExport) {
+      csvContent = _generateEzoneCsvContent(attendanceRecords);
+      fileNameSuffix = '_ezone';
+    } else {
+      csvContent = _generateCsvContent(attendanceRecords, lobbyName);
+      fileNameSuffix = '_simple';
+    }
+
+    // Create temporary file
+    final directory = await getTemporaryDirectory();
+    final sanitizedName = lobbyName.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
+    final file = File('${directory.path}/${sanitizedName}_attendance$fileNameSuffix.csv');
+    await file.writeAsString(csvContent);
+
+    // Remove the loading indicator
+    overlayEntry.remove();
+    if (!context.mounted) return;
+
+    // Share the file
+    await Share.shareXFiles(
+      [XFile(file.path)],
+      text: 'Attendance data from $lobbyName',
+      subject: 'Attendance Report - $lobbyName',
+    );
+  } catch (e) {
+    // Remove overlay and show error
+    overlayEntry.remove();
+    if (context.mounted) {
+      print('Export error: $e');
+      context.showErrorNotification(
+          'Export failed: ${e.toString().replaceAll('Exception: ', '')}');
+    }
+  }
+}
+
+
+  String _generateEzoneCsvContent(List<Map<String, dynamic>> attendanceRecords) {
+    return attendanceRecords
+    .map((record) => record['student_system_id'] as String? ?? '')
+    .join('\n');
   }
 
   String _generateCsvContent(
