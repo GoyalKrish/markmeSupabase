@@ -93,8 +93,16 @@ class _CreateLobbyScreenState extends State<CreateLobbyScreen> {
                       errorBorder: InputBorder.none,
                       focusedErrorBorder: InputBorder.none,
                     ),
-                    validator: (value) =>
-                        value?.isEmpty ?? true ? 'Required' : null,
+                    maxLength: 18,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Required';
+                      }
+                      if (value.length > 18) {
+                        return 'Name cannot exceed 18 characters';
+                      }
+                      return null;
+                    },
                   ),
                 ),
                 SizedBox(height: 32),
