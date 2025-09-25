@@ -40,14 +40,6 @@ class LobbyService {
   Future<void> _joinLobby(String lobbyId) async {
     final deviceId = await _authService.getDeviceId();
 
-    // Ensure device exists to satisfy foreign key
-    await _supabase.from('devices').upsert({
-      'user_id': _supabase.auth.currentUser!.id,
-      'id': deviceId,
-      'last_used_at': DateTime.now().toIso8601String(),
-      'banned': false,
-    }, onConflict: 'user_id');
-
     // Insert into lobby_members
     await _supabase.from('lobby_members').insert({
       'lobby_id': lobbyId,
@@ -60,8 +52,6 @@ class LobbyService {
     final random = Random();
     return List.generate(6, (_) => random.nextInt(9)).join();
   }
-
-
 
   Future<void> leaveLobby(String lobbyId) async {
     await _supabase

@@ -73,7 +73,8 @@ class MyApp extends StatelessWidget {
           // Current device is no longer valid
           await authService.signOut();
           if (context.mounted) {
-            Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+            Navigator.pushNamedAndRemoveUntil(
+                context, '/login', (route) => false);
           }
         }
       }
@@ -115,13 +116,13 @@ class MyApp extends StatelessWidget {
           routes: {
             '/login': (context) => const LoginScreen(),
             '/': (context) => HomeScreen(
-              authService: Provider.of<AuthService>(context),
-              folderService: Provider.of<FolderService>(context),
-            ),
+                  authService: Provider.of<AuthService>(context),
+                  folderService: Provider.of<FolderService>(context),
+                ),
             '/create-lobby': (context) => const CreateLobbyScreen(),
             '/active-lobby': (context) => ActiveLobbyScreen(
-              lobbyId: ModalRoute.of(context)!.settings.arguments as String,
-            ),
+                  lobbyId: ModalRoute.of(context)!.settings.arguments as String,
+                ),
           },
         );
       },

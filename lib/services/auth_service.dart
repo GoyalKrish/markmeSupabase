@@ -11,11 +11,11 @@ class AuthService {
 
   Future<bool> isUserBanned() async {
     if (_supabase.auth.currentUser == null) return false;
-    
+
     final response = await _supabase.rpc('is_user_banned', params: {
       'user_id': _supabase.auth.currentUser!.id,
     });
-    
+
     return response as bool? ?? false;
   }
 
@@ -27,20 +27,28 @@ class AuthService {
     }
   }
 
-  Future<User?> signInWithEmailAndPassword(String email, String password) async {
-    final response = await _supabase.auth.signInWithPassword(email: email, password: password);
+  Future<User?> signInWithEmailAndPassword(
+      String email, String password) async {
+    final response = await _supabase.auth
+        .signInWithPassword(email: email, password: password);
     final user = response.user;
 
     if (user != null) {
       final deviceId = await getDeviceId();
 
       // Upsert device for first login or update last_used_at
-      await _supabase.from('devices').upsert({
-        'user_id': user.id,
-        'id': deviceId,
-        'last_used_at': DateTime.now().toIso8601String(),
-        'banned': false,
-      }, onConflict: 'user_id');
+      try {
+        // Upsert device for first login or update last_used_at
+        await _supabase.from('devices').upsert({
+          'user_id': user.id,
+          'id': deviceId,
+          'last_used_at': DateTime.now().toIso8601String(),
+          'banned': false,
+        }, onConflict: 'user_id');
+      } catch (e) {
+        print('Error upserting device: $e');
+        // Log the error but do not block login
+      }
     }
 
     return user;

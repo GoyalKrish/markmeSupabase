@@ -330,7 +330,17 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  void _showUserDialog(BuildContext context) {
+  Future<void> _showUserDialog(BuildContext context) async {
+    
+    String deviceId = 'Fetching...';
+
+    // Fetch device ID asynchronously
+    try {
+      deviceId = await widget.authService.getDeviceId() ?? 'N/A';
+    } catch (_) {
+      deviceId = 'Error fetching';
+    }
+
     final user = widget.authService.currentUser;
     showDialog(
       context: context,
@@ -429,6 +439,27 @@ class _HomeScreenState extends State<HomeScreen>
                       Expanded(
                         child: SelectableText(
                           'User ID: ${user?.id ?? 'N/A'}',
+                          style: GoogleFonts.inter(
+                            color: MarkMeTheme.primaryWhite,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.devices_other_outlined,
+                        color: MarkMeTheme.primaryYellow.withOpacity(0.8),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: SelectableText(
+                          'Device ID: $deviceId',
                           style: GoogleFonts.inter(
                             color: MarkMeTheme.primaryWhite,
                             fontSize: 14,
