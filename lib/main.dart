@@ -13,6 +13,7 @@ import '../components/notification_overlay.dart';
 import 'screens/create_lobby_screen.dart';
 import 'screens/active_lobby_screen.dart';
 import 'theme/markme_theme.dart';
+import '../services/attendance_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +36,7 @@ void main() async {
         Provider(create: (_) => FolderService()),
         Provider(create: (_) => LobbyService()),
         ChangeNotifierProvider(create: (_) => LobbyProvider()),
+        Provider(create: (_) => AttendanceService()),
         ChangeNotifierProvider(create: (_) => NotificationService()),
       ],
       child: const MyApp(),
@@ -57,6 +59,25 @@ class MyApp extends StatelessWidget {
   Widget _buildMaterialApp(AuthService authService, BuildContext context) {
     authService.authStateChanges.listen((event) async {
       final session = event.session;
+      if (session != null) {
+        final deviceId = await authService.getDeviceId();
+
+        // Fetch the current active device from Supabase
+        final response = await Supabase.instance.client
+            .from('devices')
+            .select('id')
+            .eq('user_id', authService.currentUser!.id)
+            .single();
+
+        if (response['id'] != deviceId) {
+          // Current device is no longer valid
+          await authService.signOut();
+          if (context.mounted) {
+            Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+          }
+        }
+      }
+
       if (session != null && await authService.isUserBanned()) {
         await authService.signOut();
         if (context.mounted) {
@@ -66,38 +87,43 @@ class MyApp extends StatelessWidget {
       }
     });
 
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'MarkMe',
-      theme: ThemeData(
-        colorScheme: ColorScheme.dark(
-          primary: MarkMeTheme.primaryYellow,
-          secondary: MarkMeTheme.primaryYellow,
-          surface: MarkMeTheme.surfaceDark,
-        ),
-        scaffoldBackgroundColor: MarkMeTheme.darkBackground,
-        appBarTheme: AppBarTheme(
-          backgroundColor: MarkMeTheme.surfaceDark,
-          foregroundColor: MarkMeTheme.primaryWhite,
-          elevation: 0,
-        ),
-        textTheme: TextTheme(
-          headlineLarge: MarkMeTheme.headingStyle,
-          headlineMedium: MarkMeTheme.subheadingStyle,
-          bodyLarge: MarkMeTheme.labelStyle,
-        ),
-      ),
-      initialRoute: authService.currentUser != null ? '/' : '/login',
-      routes: {
-        '/login': (context) => const LoginScreen(),
-        '/': (context) => HomeScreen(
+    return StreamBuilder<User?>(
+      stream: authService.authStateChanges.map((event) => event.session?.user),
+      builder: (context, snapshot) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'MarkMe',
+          theme: ThemeData(
+            colorScheme: ColorScheme.dark(
+              primary: MarkMeTheme.primaryYellow,
+              secondary: MarkMeTheme.primaryYellow,
+              surface: MarkMeTheme.surfaceDark,
+            ),
+            scaffoldBackgroundColor: MarkMeTheme.darkBackground,
+            appBarTheme: AppBarTheme(
+              backgroundColor: MarkMeTheme.surfaceDark,
+              foregroundColor: MarkMeTheme.primaryWhite,
+              elevation: 0,
+            ),
+            textTheme: TextTheme(
+              headlineLarge: MarkMeTheme.headingStyle,
+              headlineMedium: MarkMeTheme.subheadingStyle,
+              bodyLarge: MarkMeTheme.labelStyle,
+            ),
+          ),
+          initialRoute: snapshot.hasData ? '/' : '/login',
+          routes: {
+            '/login': (context) => const LoginScreen(),
+            '/': (context) => HomeScreen(
               authService: Provider.of<AuthService>(context),
               folderService: Provider.of<FolderService>(context),
             ),
-        '/create-lobby': (context) => const CreateLobbyScreen(),
-        '/active-lobby': (context) => ActiveLobbyScreen(
+            '/create-lobby': (context) => const CreateLobbyScreen(),
+            '/active-lobby': (context) => ActiveLobbyScreen(
               lobbyId: ModalRoute.of(context)!.settings.arguments as String,
             ),
+          },
+        );
       },
     );
   }
