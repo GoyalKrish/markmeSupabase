@@ -1,0 +1,50 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.attendance_records (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  lobby_id uuid NOT NULL,
+  recorded_by uuid NOT NULL,
+  student_system_id text NOT NULL,
+  student_name text NOT NULL,
+  recorded_at timestamp with time zone NOT NULL DEFAULT now(),
+  device_id text NOT NULL,
+  synced_at timestamp with time zone,
+  lobby_name text,
+  CONSTRAINT attendance_records_pkey PRIMARY KEY (id),
+  CONSTRAINT attendance_records_lobby_id_fkey FOREIGN KEY (lobby_id) REFERENCES public.lobbies(id),
+  CONSTRAINT attendance_records_recorded_by_fkey FOREIGN KEY (recorded_by) REFERENCES auth.users(id),
+  CONSTRAINT attendance_records_device_id_fkey FOREIGN KEY (device_id) REFERENCES public.devices(id)
+);
+CREATE TABLE public.devices (
+  id text NOT NULL,
+  user_id uuid NOT NULL UNIQUE,
+  last_used_at timestamp with time zone NOT NULL DEFAULT now(),
+  banned boolean NOT NULL DEFAULT false,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT devices_pkey PRIMARY KEY (id),
+  CONSTRAINT devices_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.lobbies (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  name text NOT NULL,
+  entry_code character varying NOT NULL UNIQUE,
+  host_id uuid NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  active boolean NOT NULL DEFAULT true,
+  closed_at timestamp with time zone,
+  CONSTRAINT lobbies_pkey PRIMARY KEY (id),
+  CONSTRAINT lobbies_host_id_fkey FOREIGN KEY (host_id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.lobby_members (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  lobby_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  device_id text NOT NULL,
+  joined_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT lobby_members_pkey PRIMARY KEY (id),
+  CONSTRAINT lobby_members_lobby_id_fkey FOREIGN KEY (lobby_id) REFERENCES public.lobbies(id),
+  CONSTRAINT lobby_members_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
+  CONSTRAINT lobby_members_device_id_fkey FOREIGN KEY (device_id) REFERENCES public.devices(id)
+);

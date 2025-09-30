@@ -1,0 +1,380 @@
+[
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_insert_member_or_host",
+    "function_name_candidate": "AND"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_insert_member_or_host",
+    "function_name_candidate": "AND"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_insert_member_or_host",
+    "function_name_candidate": "AND"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_insert_member_or_host",
+    "function_name_candidate": "AND"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_insert_member_or_host",
+    "function_name_candidate": "EXISTS"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_insert_member_or_host",
+    "function_name_candidate": "EXISTS"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_insert_member_or_host",
+    "function_name_candidate": "OR"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_insert_member_or_host",
+    "function_name_candidate": "WHERE"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_insert_member_or_host",
+    "function_name_candidate": "WHERE"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_insert_member_or_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_insert_member_or_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_insert_member_or_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_insert_member_or_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_select_member_or_host",
+    "function_name_candidate": "AND"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_select_member_or_host",
+    "function_name_candidate": "AND"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_select_member_or_host",
+    "function_name_candidate": "AND"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_select_member_or_host",
+    "function_name_candidate": "EXISTS"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_select_member_or_host",
+    "function_name_candidate": "EXISTS"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_select_member_or_host",
+    "function_name_candidate": "OR"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_select_member_or_host",
+    "function_name_candidate": "WHERE"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_select_member_or_host",
+    "function_name_candidate": "WHERE"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_select_member_or_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_select_member_or_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_select_member_or_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_update_recorder_or_host",
+    "function_name_candidate": "AND"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_update_recorder_or_host",
+    "function_name_candidate": "AND"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_update_recorder_or_host",
+    "function_name_candidate": "AND"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_update_recorder_or_host",
+    "function_name_candidate": "EXISTS"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_update_recorder_or_host",
+    "function_name_candidate": "OR"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_update_recorder_or_host",
+    "function_name_candidate": "WHERE"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_update_recorder_or_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_update_recorder_or_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_update_recorder_or_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_update_recorder_or_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "attendance_records",
+    "policy_name": "attendance_update_recorder_or_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "devices",
+    "policy_name": "Users can manage their devices",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "devices",
+    "policy_name": "Users can manage their devices",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobbies",
+    "policy_name": "lobbies_insert_authenticated_host",
+    "function_name_candidate": "AND"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobbies",
+    "policy_name": "lobbies_insert_authenticated_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobbies",
+    "policy_name": "lobbies_insert_authenticated_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobbies",
+    "policy_name": "lobbies_select_authenticated",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_insert_self",
+    "function_name_candidate": "AND"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_insert_self",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_insert_self",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_select_member_or_host",
+    "function_name_candidate": "AND"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_select_member_or_host",
+    "function_name_candidate": "AND"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_select_member_or_host",
+    "function_name_candidate": "EXISTS"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_select_member_or_host",
+    "function_name_candidate": "OR"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_select_member_or_host",
+    "function_name_candidate": "WHERE"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_select_member_or_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_select_member_or_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_select_member_or_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_update_member_or_host",
+    "function_name_candidate": "AND"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_update_member_or_host",
+    "function_name_candidate": "AND"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_update_member_or_host",
+    "function_name_candidate": "AND"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_update_member_or_host",
+    "function_name_candidate": "EXISTS"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_update_member_or_host",
+    "function_name_candidate": "OR"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_update_member_or_host",
+    "function_name_candidate": "WHERE"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_update_member_or_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_update_member_or_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_update_member_or_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_update_member_or_host",
+    "function_name_candidate": "auth.uid"
+  },
+  {
+    "schema_name": "public",
+    "table_name": "lobby_members",
+    "policy_name": "lobby_members_update_member_or_host",
+    "function_name_candidate": "auth.uid"
+  }
+]

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/auth_exceptions.dart';
 import '../services/auth_service.dart';
 import '../components/markme_logo.dart';
 import '../theme/markme_theme.dart';
@@ -78,6 +79,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       );
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/');
+      }
+    } on DeviceBannedException catch (error) {
+      if (mounted) {
+        _showErrorSnackBar(error.message);
+      }
+    } on DeviceInUseException catch (error) {
+      if (mounted) {
+        _showErrorSnackBar(error.message);
       }
     } on AuthException catch (error) {
       if (mounted) {

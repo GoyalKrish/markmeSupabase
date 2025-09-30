@@ -57,37 +57,6 @@ class MyApp extends StatelessWidget {
   }
 
   Widget _buildMaterialApp(AuthService authService, BuildContext context) {
-    authService.authStateChanges.listen((event) async {
-      final session = event.session;
-      if (session != null) {
-        final deviceId = await authService.getDeviceId();
-
-        // Fetch the current active device from Supabase
-        final response = await Supabase.instance.client
-            .from('devices')
-            .select('id')
-            .eq('user_id', authService.currentUser!.id)
-            .single();
-
-        if (response['id'] != deviceId) {
-          // Current device is no longer valid
-          await authService.signOut();
-          if (context.mounted) {
-            Navigator.pushNamedAndRemoveUntil(
-                context, '/login', (route) => false);
-          }
-        }
-      }
-
-      if (session != null && await authService.isUserBanned()) {
-        await authService.signOut();
-        if (context.mounted) {
-          Navigator.pushNamedAndRemoveUntil(
-              context, '/login', (route) => false);
-        }
-      }
-    });
-
     return StreamBuilder<User?>(
       stream: authService.authStateChanges.map((event) => event.session?.user),
       builder: (context, snapshot) {
