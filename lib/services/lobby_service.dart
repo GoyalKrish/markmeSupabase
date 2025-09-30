@@ -89,7 +89,7 @@ class LobbyService {
       'lobby_id': lobbyId,
       'student_system_id': student.id,
       'student_name': student.name,
-      'user_id': _supabase.auth.currentUser!.id,
+      'recorded_by': _supabase.auth.currentUser!.id,
       'device_id': await _authService.getDeviceId(),
     });
   }
@@ -100,7 +100,7 @@ class LobbyService {
         'lobby_id': lobbyId,
         'student_system_id': student.id,
         'student_name': student.name,
-        'user_id': _supabase.auth.currentUser!.id,
+        'recorded_by': _supabase.auth.currentUser!.id,
         'device_id': await _authService.getDeviceId(),
         'synced_at': DateTime.now().toIso8601String(),
       };
