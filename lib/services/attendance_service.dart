@@ -3,30 +3,27 @@ import '../services/auth_service.dart';
 
 class AttendanceService {
   final SupabaseClient _supabase = Supabase.instance.client;
-  final AuthService _authService = AuthService();
+  final AuthService _authService;
+
+  AttendanceService(this._authService);
 
   Future<void> recordAttendance({
     required String lobbyId,
     required String studentSystemId,
     required String studentName,
   }) async {
-    final deviceId = await _authService.getDeviceId();
+    final deviceRecordId = _authService.getActiveDeviceRecordId();
+    if (deviceRecordId == null) {
+      throw Exception('No active device found. Please login again.');
+    }
 
-    // Ensure device exists to satisfy foreign key
-    await _supabase.from('devices').upsert({
-      'user_id': _supabase.auth.currentUser!.id,
-      'id': deviceId,
-      'last_used_at': DateTime.now().toIso8601String(),
-      'banned': false,
-    }, onConflict: 'user_id');
-
-    // Insert into attendance_records
+    // Insert into attendance_records using the stable device ID
     await _supabase.from('attendance_records').insert({
       'lobby_id': lobbyId,
       'recorded_by': _supabase.auth.currentUser!.id,
       'student_system_id': studentSystemId,
       'student_name': studentName,
-      'device_id': deviceId,
+      'device_id': deviceRecordId, // Use the stable UUID
       'recorded_at': DateTime.now().toIso8601String(),
     });
   }

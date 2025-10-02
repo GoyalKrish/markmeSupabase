@@ -1,22 +1,134 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:uuid/uuid.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
+import '../main.dart'; // Import main.dart to get the navigatorKey
 import 'auth_exceptions.dart';
 
 class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
-
-  // Add stream to listen for auth changes
   Stream<AuthState> get authStateChanges => _supabase.auth.onAuthStateChange;
+
+  RealtimeChannel? _userChannel;
+  StreamSubscription<AuthState>? _authSubscription;
+
+  // Cached values after login
+  String? _deviceIdentifier;
+  String? _activeDeviceRecordId; // This is the stable UUID PK from the devices table
+
+  AuthService() {
+    _authSubscription = authStateChanges.listen((data) async {
+      final session = data.session;
+      if (session != null) {
+        // When a session becomes active, cache the device identifier and start listening.
+        _deviceIdentifier = await getDeviceId();
+        _listenForSessionInvalidation(session.user.id);
+      } else {
+        // User logged out, clean up everything.
+        _userChannel?.unsubscribe();
+        _deviceIdentifier = null;
+        _activeDeviceRecordId = null;
+      }
+    });
+  }
+
+  void dispose() {
+    _authSubscription?.cancel();
+    _userChannel?.unsubscribe();
+  }
+
+  Future<User?> signInWithEmailAndPassword(String email, String password) async {
+    final response = await _supabase.auth.signInWithPassword(email: email, password: password);
+    final user = response.user;
+    if (user == null) throw const AuthException('Authentication failed.');
+
+    if (await isUserBanned(userId: user.id)) {
+      await signOut();
+      throw const AuthException('This user account has been suspended.');
+    }
+
+    final deviceIdentifier = await getDeviceId();
+    _deviceIdentifier = deviceIdentifier; // Cache the identifier
+
+    final result = await _supabase.rpc('register_device_and_deactivate_others', params: {
+      'p_user_id': user.id,
+      'p_device_identifier': deviceIdentifier,
+    });
+
+    if (result == null) {
+      await signOut();
+      throw const AuthException('Failed to register device.');
+    }
+    _activeDeviceRecordId = result.toString();
+
+    return user;
+  }
+
+  String? getActiveDeviceRecordId() => _activeDeviceRecordId;
+
+  void _listenForSessionInvalidation(String userId) {
+    _userChannel?.unsubscribe();
+    // The channel name can be arbitrary, but must be unique.
+    _userChannel = _supabase.channel('devices-listener-for-$userId');
+    _userChannel!
+        .onPostgresChanges(
+            event: PostgresChangeEvent.update,
+            schema: 'public',
+            table: 'devices',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'user_id',
+              value: userId,
+            ),
+            callback: (payload) {
+              final updatedRecord = payload.newRecord;
+              final wasDeactivated = !(updatedRecord['is_active'] as bool);
+              final updatedDeviceIdentifier = updatedRecord['device_identifier'] as String;
+
+              if (updatedDeviceIdentifier == _deviceIdentifier && wasDeactivated) {
+                print('Session invalidated remotely for device $_deviceIdentifier. Logging out.');
+
+                final context = navigatorKey.currentContext;
+                if (context != null && context.mounted) {
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => AlertDialog(
+                      title: const Text("Session Expired"),
+                      content: const Text("You have been logged out because you signed in on another device."),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            signOut();
+                          },
+                          child: const Text("OK"),
+                        ),
+                      ],
+                    ),
+                  );
+                } else {
+                  signOut();
+                }
+              }
+            })
+        .subscribe();
+  }
+
+  Future<void> signOut() async {
+    await _supabase.auth.signOut();
+    navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (route) => false);
+  }
 
   Future<bool> isUserBanned({String? userId}) async {
     final id = userId ?? _supabase.auth.currentUser?.id;
     if (id == null) return false;
 
     final response = await _supabase.rpc('is_user_banned', params: {
-      'user_id': _supabase.auth.currentUser!.id,
+      'user_id': id,
     });
 
     return response as bool? ?? false;
@@ -28,71 +140,6 @@ class AuthService {
       await signOut();
       throw AuthException('This account has been banned');
     }
-  }
-
-  Future<User?> signInWithEmailAndPassword(
-      String email, String password) async {
-    // 1. Authenticate with Supabase
-    final AuthResponse response;
-    try {
-      response =
-          await _supabase.auth.signInWithPassword(email: email, password: password);
-    } on AuthException {
-      rethrow; // Let the UI handle "Invalid login credentials"
-    }
-
-    final user = response.user;
-    if (user == null) {
-      // This case should ideally not be hit if signInWithPassword throws, but as a safeguard:
-      throw const AuthException('Authentication failed: No user data received.');
-    }
-
-    // 2. Check if the USER is banned
-    if (await isUserBanned(userId: user.id)) {
-      await signOut(); // Ensure session is cleared
-      throw const AuthException('This user account has been suspended.');
-    }
-
-    // 3. Get current device ID
-    final deviceId = await getDeviceId();
-
-    // 4. Pre-login device validation
-    final deviceResponse = await _supabase
-        .from('devices')
-        .select('user_id, banned')
-        .eq('id', deviceId)
-        .maybeSingle();
-
-    if (deviceResponse != null) {
-      // Case F: Device is banned
-      if (deviceResponse['banned'] == true) {
-        await signOut();
-        throw DeviceBannedException();
-      }
-      // Case D: Device exists and is linked to another user
-      if (deviceResponse['user_id'] != user.id) {
-        await signOut();
-        throw DeviceInUseException();
-      }
-    }
-
-    // 5. All checks passed, register the device.
-    // This handles Case A (existing device) and Case B/E (new device for this user).
-    // The 'onConflict: 'user_id'' ensures this user can only have one device entry.
-    // It will overwrite the previous deviceId if it's a new device for this user.
-    await _supabase.from('devices').upsert({
-      'user_id': user.id,
-      'id': deviceId,
-      'last_used_at': DateTime.now().toIso8601String(),
-      'banned': false,
-    }, onConflict: 'user_id');
-
-    // 6. Return user to allow login to proceed
-    return user;
-  }
-
-  Future<void> signOut() async {
-    await _supabase.auth.signOut();
   }
 
   User? get currentUser => _supabase.auth.currentUser;

@@ -1681,18 +1681,9 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () async {
+                      onPressed: () {
                         Navigator.pop(context); // Close dialog
-                        try {
-                          await widget.authService.signOut();
-                          if (context.mounted) {
-                            Navigator.pushReplacementNamed(context, '/login');
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            context.showErrorNotification('Logout failed: $e');
-                          }
-                        }
+                        widget.authService.signOut(); // Service handles the rest
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.redAccent,

@@ -8,22 +8,24 @@ CREATE TABLE public.attendance_records (
   student_system_id text NOT NULL,
   student_name text NOT NULL,
   recorded_at timestamp with time zone NOT NULL DEFAULT now(),
-  device_id text NOT NULL,
   synced_at timestamp with time zone,
   lobby_name text,
+  device_id uuid NOT NULL,
   CONSTRAINT attendance_records_pkey PRIMARY KEY (id),
   CONSTRAINT attendance_records_lobby_id_fkey FOREIGN KEY (lobby_id) REFERENCES public.lobbies(id),
   CONSTRAINT attendance_records_recorded_by_fkey FOREIGN KEY (recorded_by) REFERENCES auth.users(id),
   CONSTRAINT attendance_records_device_id_fkey FOREIGN KEY (device_id) REFERENCES public.devices(id)
 );
 CREATE TABLE public.devices (
-  id text NOT NULL,
-  user_id uuid NOT NULL UNIQUE,
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL,
+  device_identifier text NOT NULL,
+  is_active boolean NOT NULL DEFAULT true,
   last_used_at timestamp with time zone NOT NULL DEFAULT now(),
   banned boolean NOT NULL DEFAULT false,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT devices_pkey PRIMARY KEY (id),
-  CONSTRAINT devices_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
+  CONSTRAINT devices_user_id_fkey1 FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.lobbies (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -41,8 +43,8 @@ CREATE TABLE public.lobby_members (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   lobby_id uuid NOT NULL,
   user_id uuid NOT NULL,
-  device_id text NOT NULL,
   joined_at timestamp with time zone NOT NULL DEFAULT now(),
+  device_id uuid NOT NULL,
   CONSTRAINT lobby_members_pkey PRIMARY KEY (id),
   CONSTRAINT lobby_members_lobby_id_fkey FOREIGN KEY (lobby_id) REFERENCES public.lobbies(id),
   CONSTRAINT lobby_members_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
