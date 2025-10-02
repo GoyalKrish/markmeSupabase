@@ -15,7 +15,11 @@ class AuthService {
   RealtimeChannel? _userChannel;
   StreamSubscription<AuthState>? _authSubscription;
 
-  // Cached values after login
+  // Completer to signal when async initialization is done.
+  final Completer<void> _initCompleter = Completer<void>();
+  Future<void> get isInitialized => _initCompleter.future;
+
+  // Cached values
   String? _deviceIdentifier;
   String? _activeDeviceRecordId; // This is the stable UUID PK from the devices table
 
@@ -23,16 +27,42 @@ class AuthService {
     _authSubscription = authStateChanges.listen((data) async {
       final session = data.session;
       if (session != null) {
-        // When a session becomes active, cache the device identifier and start listening.
         _deviceIdentifier = await getDeviceId();
+        await _fetchAndCacheActiveDeviceRecord(session.user.id, _deviceIdentifier!);
         _listenForSessionInvalidation(session.user.id);
       } else {
-        // User logged out, clean up everything.
         _userChannel?.unsubscribe();
         _deviceIdentifier = null;
         _activeDeviceRecordId = null;
       }
+
+      // Signal that initialization is complete, whether logged in or not.
+      if (!_initCompleter.isCompleted) {
+        _initCompleter.complete();
+      }
     });
+  }
+
+  Future<void> _fetchAndCacheActiveDeviceRecord(String userId, String deviceIdentifier) async {
+    try {
+      final response = await _supabase
+          .from('devices')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('device_identifier', deviceIdentifier)
+          .maybeSingle();
+
+      if (response != null) {
+        _activeDeviceRecordId = response['id'] as String;
+        print('Active device ID $_activeDeviceRecordId cached on startup.');
+      } else {
+        _activeDeviceRecordId = null;
+        print('No active device record found on startup for device: $deviceIdentifier');
+      }
+    } catch (e) {
+      print('Error fetching active device record: $e');
+      _activeDeviceRecordId = null;
+    }
   }
 
   void dispose() {
@@ -51,7 +81,7 @@ class AuthService {
     }
 
     final deviceIdentifier = await getDeviceId();
-    _deviceIdentifier = deviceIdentifier; // Cache the identifier
+    _deviceIdentifier = deviceIdentifier;
 
     final result = await _supabase.rpc('register_device_and_deactivate_others', params: {
       'p_user_id': user.id,
@@ -63,6 +93,7 @@ class AuthService {
       throw const AuthException('Failed to register device.');
     }
     _activeDeviceRecordId = result.toString();
+    print('Active device ID $_activeDeviceRecordId set on login.');
 
     return user;
   }
@@ -71,7 +102,6 @@ class AuthService {
 
   void _listenForSessionInvalidation(String userId) {
     _userChannel?.unsubscribe();
-    // The channel name can be arbitrary, but must be unique.
     _userChannel = _supabase.channel('devices-listener-for-$userId');
     _userChannel!
         .onPostgresChanges(

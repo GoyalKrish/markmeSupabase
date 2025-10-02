@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_exceptions.dart';
 import '../services/auth_service.dart';
@@ -29,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
-    _authService = AuthService();
+    _authService = Provider.of<AuthService>(context, listen: false);
     
     _animationController = AnimationController(
       vsync: this,
