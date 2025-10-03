@@ -1,3 +1,5 @@
+import 'dart:io'; // FIX: Add missing import for SocketException
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -19,7 +21,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
-  final bool _rememberMe = false;
+  // FIX: Removed unused _rememberMe field
   
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -78,9 +80,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
+
+      // Await the completer in AuthService to ensure all async login logic is finished.
+      await _authService.onLoginComplete;
+
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/');
+        Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       }
+    // FIX: Reordered catch clauses to handle specific exceptions first.
     } on DeviceBannedException catch (error) {
       if (mounted) {
         _showErrorSnackBar(error.message);
@@ -92,6 +99,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     } on AuthException catch (error) {
       if (mounted) {
         _showErrorSnackBar(error.message);
+      }
+    } on SocketException {
+      if (mounted) {
+        _showErrorSnackBar('Network error: Please check your internet connection.');
       }
     } catch (e) {
       if (mounted) {
@@ -359,4 +370,4 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       ),
     );
   }
-} 
+}

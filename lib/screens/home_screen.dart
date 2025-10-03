@@ -803,56 +803,62 @@ class _HomeScreenState extends State<HomeScreen>
                           color: MarkMeTheme.surfaceDark,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16.0, vertical: 8.0),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: _searchController,
-                                  focusNode: _searchFocusNode,
-                                  style: TextStyle(
-                                      color: MarkMeTheme.primaryWhite),
-                                  textInputAction: TextInputAction.search,
-                                  decoration: InputDecoration(
-                                    hintText:
-                                        'Search \${DefaultTabController.of(context).index == 0 ? "folders" : "lobbies"}...',
-                                    hintStyle: TextStyle(
-                                      color: MarkMeTheme.primaryWhite
-                                          .withOpacity(0.5),
-                                    ),
-                                    prefixIcon: Icon(
-                                      Icons.search,
-                                      color: MarkMeTheme.primaryYellow,
-                                      size: 20,
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(20),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    filled: true,
-                                    fillColor: MarkMeTheme.darkBackground,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 10,
-                                      horizontal: 16,
+                          child: Builder(builder: (context) {
+                            final tabIndex = DefaultTabController.of(context).index;
+                            final placeholder = tabIndex == 0
+                                ? 'Search folders...'
+                                : 'Search lobbies...';
+                            return Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _searchController,
+                                    focusNode: _searchFocusNode,
+                                    style: TextStyle(
+                                        color: MarkMeTheme.primaryWhite),
+                                    textInputAction: TextInputAction.search,
+                                    decoration: InputDecoration(
+                                      hintText: placeholder,
+                                      hintStyle: TextStyle(
+                                        color: MarkMeTheme.primaryWhite
+                                            .withOpacity(0.5),
+                                      ),
+                                      prefixIcon: Icon(
+                                        Icons.search,
+                                        color: MarkMeTheme.primaryYellow,
+                                        size: 20,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      filled: true,
+                                      fillColor: MarkMeTheme.darkBackground,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        vertical: 10,
+                                        horizontal: 16,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.clear, size: 24),
-                                color:
-                                    MarkMeTheme.primaryWhite.withOpacity(0.7),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() {
-                                    _isSearchExpanded = false;
-                                    _searchQuery = '';
-                                  });
-                                  FocusScope.of(context).unfocus();
-                                  _searchPanelController.reverse();
-                                },
-                              ),
-                            ],
-                          ),
+                                IconButton(
+                                  icon: const Icon(Icons.clear, size: 24),
+                                  color: MarkMeTheme.primaryWhite
+                                      .withOpacity(0.7),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() {
+                                      _isSearchExpanded = false;
+                                      _searchQuery = '';
+                                    });
+                                    FocusScope.of(context).unfocus();
+                                    _searchPanelController.reverse();
+                                  },
+                                ),
+                              ],
+                            );
+                          }),
                         ),
                       ),
                       Expanded(

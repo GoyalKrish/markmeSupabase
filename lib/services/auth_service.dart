@@ -15,53 +15,58 @@ class AuthService {
   RealtimeChannel? _userChannel;
   StreamSubscription<AuthState>? _authSubscription;
 
-  // Completer to signal when async initialization is done.
   final Completer<void> _initCompleter = Completer<void>();
   Future<void> get isInitialized => _initCompleter.future;
 
-  // Cached values
+  // NEW: Completer to signal when a new login has fully processed.
+  Completer<void> _loginCompleter = Completer<void>();
+
   String? _deviceIdentifier;
-  String? _activeDeviceRecordId; // This is the stable UUID PK from the devices table
+  String? _activeDeviceRecordId;
 
   AuthService() {
     _authSubscription = authStateChanges.listen((data) async {
       final session = data.session;
       if (session != null) {
         _deviceIdentifier = await getDeviceId();
-        await _fetchAndCacheActiveDeviceRecord(session.user.id, _deviceIdentifier!);
-        _listenForSessionInvalidation(session.user.id);
+        final isValid = await _validateAndCacheActiveDevice(session.user.id, _deviceIdentifier!);
+        if (isValid) {
+          _listenForSessionInvalidation(session.user.id);
+        } else {
+          await _performLocalSignOut();
+        }
       } else {
-        _userChannel?.unsubscribe();
-        _deviceIdentifier = null;
-        _activeDeviceRecordId = null;
+        _clearLocalState();
       }
 
-      // Signal that initialization is complete, whether logged in or not.
       if (!_initCompleter.isCompleted) {
         _initCompleter.complete();
       }
     });
   }
 
-  Future<void> _fetchAndCacheActiveDeviceRecord(String userId, String deviceIdentifier) async {
+  Future<bool> _validateAndCacheActiveDevice(String userId, String deviceIdentifier) async {
     try {
       final response = await _supabase
           .from('devices')
-          .select('id')
+          .select('id, is_active')
           .eq('user_id', userId)
           .eq('device_identifier', deviceIdentifier)
           .maybeSingle();
 
-      if (response != null) {
+      if (response != null && response['is_active'] == true) {
         _activeDeviceRecordId = response['id'] as String;
-        print('Active device ID $_activeDeviceRecordId cached on startup.');
-      } else {
-        _activeDeviceRecordId = null;
-        print('No active device record found on startup for device: $deviceIdentifier');
+        print('Active device ID $_activeDeviceRecordId validated and cached.');
+        return true;
       }
+
+      print('Device validation failed. No active record found for device: $deviceIdentifier');
+      _clearLocalState();
+      return false;
     } catch (e) {
-      print('Error fetching active device record: $e');
-      _activeDeviceRecordId = null;
+      print('Error validating device: $e');
+      _clearLocalState();
+      return false;
     }
   }
 
@@ -71,32 +76,45 @@ class AuthService {
   }
 
   Future<User?> signInWithEmailAndPassword(String email, String password) async {
-    final response = await _supabase.auth.signInWithPassword(email: email, password: password);
-    final user = response.user;
-    if (user == null) throw const AuthException('Authentication failed.');
-
-    if (await isUserBanned(userId: user.id)) {
-      await signOut();
-      throw const AuthException('This user account has been suspended.');
+    // Reset the completer for the new login attempt.
+    if (_loginCompleter.isCompleted) {
+      _loginCompleter = Completer<void>();
     }
 
-    final deviceIdentifier = await getDeviceId();
-    _deviceIdentifier = deviceIdentifier;
+    try {
+      final response = await _supabase.auth.signInWithPassword(email: email, password: password);
+      final user = response.user;
+      if (user == null) throw const AuthException('Authentication failed.');
 
-    final result = await _supabase.rpc('register_device_and_deactivate_others', params: {
-      'p_user_id': user.id,
-      'p_device_identifier': deviceIdentifier,
-    });
+      if (await isUserBanned(userId: user.id)) {
+        await signOut();
+        throw const AuthException('This user account has been suspended.');
+      }
 
-    if (result == null) {
-      await signOut();
-      throw const AuthException('Failed to register device.');
+      final deviceIdentifier = await getDeviceId();
+      _deviceIdentifier = deviceIdentifier;
+
+      final result = await _supabase.rpc('register_device_and_deactivate_others', params: {
+        'p_user_id': user.id,
+        'p_device_identifier': deviceIdentifier,
+      });
+
+      if (result == null) {
+        await signOut();
+        throw const AuthException('Failed to register device.');
+      }
+      _activeDeviceRecordId = result.toString();
+      print('Active device ID $_activeDeviceRecordId set on login.');
+
+      return user;
+    } finally {
+      // Signal that the login process (including RPC) is complete.
+      _loginCompleter.complete();
     }
-    _activeDeviceRecordId = result.toString();
-    print('Active device ID $_activeDeviceRecordId set on login.');
-
-    return user;
   }
+
+  // NEW: Expose the login future.
+  Future<void> get onLoginComplete => _loginCompleter.future;
 
   String? getActiveDeviceRecordId() => _activeDeviceRecordId;
 
@@ -119,48 +137,72 @@ class AuthService {
               final updatedDeviceIdentifier = updatedRecord['device_identifier'] as String;
 
               if (updatedDeviceIdentifier == _deviceIdentifier && wasDeactivated) {
-                print('Session invalidated remotely for device $_deviceIdentifier. Logging out.');
-
-                final context = navigatorKey.currentContext;
-                if (context != null && context.mounted) {
-                  showDialog(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (context) => AlertDialog(
-                      title: const Text("Session Expired"),
-                      content: const Text("You have been logged out because you signed in on another device."),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            signOut();
-                          },
-                          child: const Text("OK"),
-                        ),
-                      ],
-                    ),
-                  );
-                } else {
-                  signOut();
-                }
+                print('Session invalidated remotely for device $_deviceIdentifier. Forcing local logout.');
+                _handleForcedLogout();
               }
             })
         .subscribe();
   }
 
+  Future<void> _handleForcedLogout() async {
+    try {
+      final context = navigatorKey.currentContext;
+      if (context != null && context.mounted) {
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text("Session Expired"),
+            content: const Text("You have been logged out because you signed in on another device."),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text("OK"),
+              ),
+            ],
+          ),
+        );
+      }
+      await _performLocalSignOut();
+    } catch (e) {
+      print('Error during forced logout: $e');
+      // As a fallback, ensure navigation to login happens.
+      await _performLocalSignOut();
+    }
+  }
+
+  Future<void> _performLocalSignOut() async {
+    try {
+      await _supabase.auth.signOut(scope: SignOutScope.local);
+    } catch (e) {
+      print('Error during local sign out: $e');
+    } finally {
+      _clearLocalState();
+      navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (route) => false);
+    }
+  }
+
+  void _clearLocalState() {
+    _userChannel?.unsubscribe();
+    _deviceIdentifier = null;
+    _activeDeviceRecordId = null;
+  }
+
   Future<void> signOut() async {
-    await _supabase.auth.signOut();
-    navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (route) => false);
+    try {
+      await _supabase.auth.signOut();
+    } catch (e) {
+      print('Error during global sign out: $e');
+    } finally {
+      _clearLocalState();
+      navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (route) => false);
+    }
   }
 
   Future<bool> isUserBanned({String? userId}) async {
     final id = userId ?? _supabase.auth.currentUser?.id;
     if (id == null) return false;
-
-    final response = await _supabase.rpc('is_user_banned', params: {
-      'user_id': id,
-    });
-
+    final response = await _supabase.rpc('is_user_banned', params: {'user_id': id});
     return response as bool? ?? false;
   }
 

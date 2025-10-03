@@ -12,6 +12,7 @@ import '../services/notification_service.dart';
 import '../components/notification_overlay.dart';
 import 'screens/create_lobby_screen.dart';
 import 'screens/active_lobby_screen.dart';
+import 'screens/splash_screen.dart'; // Import the new splash screen
 import 'theme/markme_theme.dart';
 import '../services/attendance_service.dart';
 
@@ -53,65 +54,44 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context, listen: false);
-
-    return FutureBuilder(
-      future: authService.isInitialized,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return MaterialApp(
-            home: Scaffold(
-              backgroundColor: MarkMeTheme.darkBackground,
-              body: Center(
-                child: CircularProgressIndicator(color: MarkMeTheme.primaryYellow),
-              ),
-            ),
-          );
-        }
-
-        return NotificationOverlay(
-          child: StreamBuilder<User?>(
-            stream: authService.authStateChanges.map((event) => event.session?.user),
-            builder: (context, authSnapshot) {
-              return MaterialApp(
-                navigatorKey: navigatorKey,
-                debugShowCheckedModeBanner: false,
-                title: 'MarkMe',
-                theme: ThemeData(
-                  colorScheme: ColorScheme.dark(
-                    primary: MarkMeTheme.primaryYellow,
-                    secondary: MarkMeTheme.primaryYellow,
-                    surface: MarkMeTheme.surfaceDark,
-                  ),
-                  scaffoldBackgroundColor: MarkMeTheme.darkBackground,
-                  appBarTheme: AppBarTheme(
-                    backgroundColor: MarkMeTheme.surfaceDark,
-                    foregroundColor: MarkMeTheme.primaryWhite,
-                    elevation: 0,
-                  ),
-                  textTheme: TextTheme(
-                    headlineLarge: MarkMeTheme.headingStyle,
-                    headlineMedium: MarkMeTheme.subheadingStyle,
-                    bodyLarge: MarkMeTheme.labelStyle,
-                  ),
-                ),
-                initialRoute: authSnapshot.hasData ? '/' : '/login',
-                routes: {
-                  '/login': (context) => const LoginScreen(),
-                  '/': (context) => HomeScreen(
-                        authService: Provider.of<AuthService>(context),
-                        folderService: Provider.of<FolderService>(context),
-                      ),
-                  '/create-lobby': (context) => const CreateLobbyScreen(),
-                  '/active-lobby': (context) => ActiveLobbyScreen(
-                        lobbyId: ModalRoute.of(context)!.settings.arguments as String,
-                      ),
-                },
-              );
-            },
+    return NotificationOverlay(
+      child: MaterialApp(
+        navigatorKey: navigatorKey,
+        debugShowCheckedModeBanner: false,
+        title: 'MarkMe',
+        theme: ThemeData(
+          colorScheme: ColorScheme.dark(
+            primary: MarkMeTheme.primaryYellow,
+            secondary: MarkMeTheme.primaryYellow,
+            surface: MarkMeTheme.surfaceDark,
           ),
-        );
-      },
+          scaffoldBackgroundColor: MarkMeTheme.darkBackground,
+          appBarTheme: AppBarTheme(
+            backgroundColor: MarkMeTheme.surfaceDark,
+            foregroundColor: MarkMeTheme.primaryWhite,
+            elevation: 0,
+          ),
+          textTheme: TextTheme(
+            headlineLarge: MarkMeTheme.headingStyle,
+            headlineMedium: MarkMeTheme.subheadingStyle,
+            bodyLarge: MarkMeTheme.labelStyle,
+          ),
+        ),
+        // The initial route is now always the splash screen.
+        initialRoute: '/splash',
+        routes: {
+          '/splash': (context) => const SplashScreen(),
+          '/login': (context) => const LoginScreen(),
+          '/': (context) => HomeScreen(
+                authService: Provider.of<AuthService>(context),
+                folderService: Provider.of<FolderService>(context),
+              ),
+          '/create-lobby': (context) => const CreateLobbyScreen(),
+          '/active-lobby': (context) => ActiveLobbyScreen(
+                lobbyId: ModalRoute.of(context)!.settings.arguments as String,
+              ),
+        },
+      ),
     );
   }
 }
