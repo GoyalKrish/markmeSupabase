@@ -6,10 +6,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../main.dart'; // Import main.dart to get the navigatorKey
+import '../providers/lobby_provider.dart';
 import 'auth_exceptions.dart';
+import 'folder_service.dart';
 
 class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
+  final FolderService _folderService;
+  final LobbyProvider _lobbyProvider;
+
   Stream<AuthState> get authStateChanges => _supabase.auth.onAuthStateChange;
 
   RealtimeChannel? _userChannel;
@@ -18,27 +23,40 @@ class AuthService {
   final Completer<void> _initCompleter = Completer<void>();
   Future<void> get isInitialized => _initCompleter.future;
 
-  // NEW: Completer to signal when a new login has fully processed.
   Completer<void> _loginCompleter = Completer<void>();
 
   String? _deviceIdentifier;
   String? _activeDeviceRecordId;
+  bool _isLoggingIn = false;
 
-  AuthService() {
+  AuthService(this._folderService, this._lobbyProvider) {
     _authSubscription = authStateChanges.listen((data) async {
+      // If a manual login is in progress, let signInWithEmailAndPassword handle everything.
+      // We just complete the initializer if needed and exit.
+      if (_isLoggingIn) {
+        if (!_initCompleter.isCompleted) {
+          _initCompleter.complete();
+        }
+        return;
+      }
+
       final session = data.session;
       if (session != null) {
+        // This path is for when the app starts with an existing, valid session.
         _deviceIdentifier = await getDeviceId();
         final isValid = await _validateAndCacheActiveDevice(session.user.id, _deviceIdentifier!);
         if (isValid) {
           _listenForSessionInvalidation(session.user.id);
         } else {
+          // This will be called if the session from storage is no longer valid in the DB.
           await _performLocalSignOut();
         }
       } else {
-        _clearLocalState();
+        // This is for a logout event.
+        await _clearLocalState();
       }
 
+      // Ensure the completer is always completed.
       if (!_initCompleter.isCompleted) {
         _initCompleter.complete();
       }
@@ -56,16 +74,14 @@ class AuthService {
 
       if (response != null && response['is_active'] == true) {
         _activeDeviceRecordId = response['id'] as String;
-        print('Active device ID $_activeDeviceRecordId validated and cached.');
         return true;
       }
 
-      print('Device validation failed. No active record found for device: $deviceIdentifier');
-      _clearLocalState();
+      // Don't clear local state here, as it might be a temporary mismatch during login.
+      // Let the calling function decide.
       return false;
     } catch (e) {
-      print('Error validating device: $e');
-      _clearLocalState();
+      // Don't clear state on a mere exception, could be a network blip.
       return false;
     }
   }
@@ -76,10 +92,8 @@ class AuthService {
   }
 
   Future<User?> signInWithEmailAndPassword(String email, String password) async {
-    // Reset the completer for the new login attempt.
-    if (_loginCompleter.isCompleted) {
-      _loginCompleter = Completer<void>();
-    }
+    _loginCompleter = Completer<void>();
+    _isLoggingIn = true;
 
     try {
       final response = await _supabase.auth.signInWithPassword(email: email, password: password);
@@ -92,7 +106,6 @@ class AuthService {
       }
 
       final deviceIdentifier = await getDeviceId();
-      _deviceIdentifier = deviceIdentifier;
 
       final result = await _supabase.rpc('register_device_and_deactivate_others', params: {
         'p_user_id': user.id,
@@ -103,17 +116,21 @@ class AuthService {
         await signOut();
         throw const AuthException('Failed to register device.');
       }
+      
+      // Set state AFTER RPC is successful
       _activeDeviceRecordId = result.toString();
-      print('Active device ID $_activeDeviceRecordId set on login.');
+      _deviceIdentifier = deviceIdentifier;
+
+      // Manually start the listener since onAuthStateChange is now bypassed during login
+      _listenForSessionInvalidation(user.id);
 
       return user;
     } finally {
-      // Signal that the login process (including RPC) is complete.
       _loginCompleter.complete();
+      _isLoggingIn = false;
     }
   }
 
-  // NEW: Expose the login future.
   Future<void> get onLoginComplete => _loginCompleter.future;
 
   String? getActiveDeviceRecordId() => _activeDeviceRecordId;
@@ -131,13 +148,17 @@ class AuthService {
               column: 'user_id',
               value: userId,
             ),
-            callback: (payload) {
+            callback: (payload) async {
+              // This check is still a good secondary safety measure.
+              if (_isLoggingIn) return;
+              
+              await onLoginComplete;
+
               final updatedRecord = payload.newRecord;
               final wasDeactivated = !(updatedRecord['is_active'] as bool);
               final updatedDeviceIdentifier = updatedRecord['device_identifier'] as String;
 
               if (updatedDeviceIdentifier == _deviceIdentifier && wasDeactivated) {
-                print('Session invalidated remotely for device $_deviceIdentifier. Forcing local logout.');
                 _handleForcedLogout();
               }
             })
@@ -165,8 +186,6 @@ class AuthService {
       }
       await _performLocalSignOut();
     } catch (e) {
-      print('Error during forced logout: $e');
-      // As a fallback, ensure navigation to login happens.
       await _performLocalSignOut();
     }
   }
@@ -175,14 +194,16 @@ class AuthService {
     try {
       await _supabase.auth.signOut(scope: SignOutScope.local);
     } catch (e) {
-      print('Error during local sign out: $e');
+      // Log error but continue cleanup
     } finally {
-      _clearLocalState();
+      await _clearLocalState();
       navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (route) => false);
     }
   }
 
-  void _clearLocalState() {
+  Future<void> _clearLocalState() async {
+    await _folderService.clearAllData();
+    _lobbyProvider.clearLobby(); // Clear lobby provider state
     _userChannel?.unsubscribe();
     _deviceIdentifier = null;
     _activeDeviceRecordId = null;
@@ -190,11 +211,14 @@ class AuthService {
 
   Future<void> signOut() async {
     try {
+      // We don't need to call the deactivation RPC on signout,
+      // as the new login on another device will handle it.
+      // Just sign out from supabase.
       await _supabase.auth.signOut();
     } catch (e) {
-      print('Error during global sign out: $e');
+      // Log error but continue cleanup
     } finally {
-      _clearLocalState();
+      await _clearLocalState();
       navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (route) => false);
     }
   }

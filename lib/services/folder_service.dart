@@ -106,4 +106,11 @@ class FolderService {
       await saveStudents(folderName, students);
     }
   }
+
+  // NEW: Clears all data stored in SharedPreferences for this app.
+  Future<void> clearAllData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    print('All folder service data cleared.');
+  }
 } 

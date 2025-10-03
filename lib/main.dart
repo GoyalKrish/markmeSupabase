@@ -30,13 +30,21 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        Provider<AuthService>(
-          create: (_) => AuthService(),
-          dispose: (_, authService) => authService.dispose(),
-        ),
+        // Create services that have no dependencies first.
         Provider<FolderService>(create: (_) => FolderService()),
         ChangeNotifierProvider<LobbyProvider>(create: (_) => LobbyProvider()),
         ChangeNotifierProvider<NotificationService>(create: (_) => NotificationService()),
+
+        // AuthService depends on FolderService and LobbyProvider.
+        ProxyProvider2<FolderService, LobbyProvider, AuthService>(
+          create: (context) => AuthService(
+            context.read<FolderService>(),
+            context.read<LobbyProvider>(),
+          ),
+          update: (_, folderService, lobbyProvider, authService) =>
+              authService ?? AuthService(folderService, lobbyProvider),
+          dispose: (_, authService) => authService.dispose(),
+        ),
         ProxyProvider<AuthService, LobbyService>(
           update: (_, authService, __) => LobbyService(authService),
         ),
