@@ -16,6 +16,7 @@ import '../theme/markme_theme.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../utils/notification_extensions.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; 
 
 class HomeScreen extends StatefulWidget {
   final AuthService authService;
@@ -1873,9 +1874,17 @@ class _HomeScreenState extends State<HomeScreen>
                   }
                 } catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: ${e.toString()}')),
-                    );
+                    String errorMessage = 'An unexpected error occurred. Please try again.';
+                    if (e is PostgrestException) {
+                      if (e.code == 'PGRST116') {
+                        errorMessage = 'Incorrect lobby password. Please check and try again.';
+                      } else {
+                        errorMessage = 'Lobby join failed: ${e.message}';
+                      }
+                    } else {
+                      errorMessage = 'Error: ${e.toString()}';
+                    }
+                    context.showErrorNotification(errorMessage);
                   }
                 }
               },
