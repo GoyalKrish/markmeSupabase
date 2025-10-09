@@ -1906,84 +1906,111 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _deleteLobby(BuildContext context, Lobby lobby) async {
-    // Check if user is the host
-    if (lobby.hostId != widget.authService.currentUser?.id) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('You can only delete lobbies that you have created')),
-      );
-      return;
-    }
+    final lobbyProvider = Provider.of<LobbyProvider>(context, listen: false);
 
-    // Show confirmation dialog
     final shouldDelete = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Delete Lobby'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            backgroundColor: MarkMeTheme.surfaceDark,
+            title: Text(
+              'Delete Lobby',
+              style: GoogleFonts.inter(
+                color: MarkMeTheme.primaryWhite,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
             content: Text(
-                'Are you sure you want to delete "${lobby.name}"? This action cannot be undone.'),
+              'Are you sure you want to delete "${lobby.name}"? This will remove all members and attendance records permanently.',
+              style: GoogleFonts.inter(
+                color: MarkMeTheme.primaryWhite.withOpacity(0.8),
+                fontSize: 16,
+              ),
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
+                child: Text(
+                  'Cancel',
+                  style: GoogleFonts.inter(
+                      color: MarkMeTheme.primaryWhite, fontWeight: FontWeight.w500),
+                ),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context, true),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: const Text('Delete'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                child: Text(
+                  'Delete',
+                  style: GoogleFonts.inter(
+                      color: MarkMeTheme.primaryWhite, fontWeight: FontWeight.w600),
+                ),
               ),
             ],
           ),
         ) ??
         false;
 
-    if (!shouldDelete) return;
+    if (!shouldDelete || !context.mounted) return;
 
-    try {
-      final lobbyService = Provider.of<LobbyService>(context, listen: false);
-      final lobbyProvider = Provider.of<LobbyProvider>(context, listen: false);
+    final lobbyService = Provider.of<LobbyService>(context, listen: false);
 
-      await lobbyService.deleteLobby(lobby.id);
-      await lobbyProvider.fetchActiveLobbies();
+    // Optimistic UI update
+    lobbyProvider.removeLobby(lobby.id);
+    context.showInfoNotification('Deleting lobby "${lobby.name}"...');
 
+    final (success, errorMessage) = await lobbyService.deleteLobby(lobby.id);
+
+    if (!success) {
+      // Rollback UI and show error
+      lobbyProvider.addLobby(lobby);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Lobby deleted successfully')),
-        );
+        context.showErrorNotification(errorMessage ?? 'An unknown error occurred.');
       }
-    } catch (e) {
+    } else {
+      // Final success message
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting lobby: $e')),
-        );
+        context.showSuccessNotification('Lobby "${lobby.name}" deleted.');
       }
     }
   }
 
   void _showLobbyOptionsMenu(BuildContext context, Lobby lobby) {
+    // Preserve the HomeScreen's context to be used after the sheet is closed.
+    final homeScreenContext = context;
     showModalBottomSheet(
       context: context,
       backgroundColor: MarkMeTheme.surfaceDark,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
+      builder: (sheetContext) {
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 20.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ListTile(
-                leading: Icon(Icons.delete_outline, color: Colors.redAccent),
-                title: Text(
-                  'Delete Lobby',
-                  style: TextStyle(color: MarkMeTheme.primaryWhite),
+              if (lobby.hostId == widget.authService.currentUser?.id)
+                ListTile(
+                  leading: Icon(Icons.delete_outline, color: Colors.redAccent),
+                  title: Text(
+                    'Delete Lobby',
+                    style: TextStyle(color: MarkMeTheme.primaryWhite),
+                  ),
+                  onTap: () {
+                    // Pop the sheet using its own context.
+                    Navigator.pop(sheetContext);
+                    // Call the delete method using the preserved HomeScreen context.
+                    _deleteLobby(homeScreenContext, lobby);
+                  },
                 ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _deleteLobby(context, lobby);
-                },
-              ),
               ListTile(
                 leading: Icon(Icons.cancel_outlined,
                     color: MarkMeTheme.primaryWhite),
@@ -1992,7 +2019,7 @@ class _HomeScreenState extends State<HomeScreen>
                   style: TextStyle(color: MarkMeTheme.primaryWhite),
                 ),
                 onTap: () {
-                  Navigator.pop(context);
+                  Navigator.pop(sheetContext);
                 },
               ),
             ],

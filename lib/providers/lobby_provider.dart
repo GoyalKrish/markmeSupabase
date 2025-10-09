@@ -51,6 +51,17 @@ class LobbyProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void removeLobby(String lobbyId) {
+    _activeLobbies.removeWhere((lobby) => lobby.id == lobbyId);
+    notifyListeners();
+  }
+
+  void addLobby(Lobby lobby) {
+    _activeLobbies.add(lobby);
+    // You might want to sort the list again here if order matters
+    notifyListeners();
+  }
+
   Future<void> fetchActiveLobbies() async {
     final response = await _supabase.from('lobbies').select('''
           *, 

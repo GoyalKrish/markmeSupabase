@@ -89,9 +89,14 @@ class LobbyService {
     });
   }
 
-  Future<void> deleteLobby(String lobbyId) async {
-    // The RLS policies and CASCADE constraints now handle the logic for deletion.
-    // We just need to delete the lobby row itself.
-    await _supabase.from('lobbies').delete().eq('id', lobbyId);
+  Future<(bool, String?)> deleteLobby(String lobbyId) async {
+    try {
+      await _supabase.from('lobbies').delete().eq('id', lobbyId);
+      return (true, null);
+    } on PostgrestException catch (e) {
+      return (false, 'Failed to delete lobby: ${e.message}');
+    } catch (e) {
+      return (false, 'An unexpected error occurred.');
+    }
   }
 }
