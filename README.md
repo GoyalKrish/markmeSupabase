@@ -1,46 +1,135 @@
 <div align="center">
 
-# MarkMe
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f2027,50:203a43,100:2c5364&height=230&section=header&text=MarkMe&fontColor=ffffff&fontSize=88&fontAlignY=38&desc=Attendance%20at%20the%20speed%20of%20a%20tap&descColor=9be7ff&descSize=24&descAlignY=60&animation=fadeIn" alt="MarkMe" width="100%" />
 
-### Attendance in one tap. Just tap an NFC card on the phone.
+<a href="https://inmarkme.vercel.app/">
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&duration=3200&pause=900&color=00E5FF&center=true&vCenter=true&width=680&lines=Tap.+Mark.+Done.;NFC-powered+attendance+for+campuses+%26+events;Works+offline.+Syncs+when+online.;Patent+pending+technology" alt="Typing animation" />
+</a>
 
-A mobile app that lets universities and event teams mark attendance by tapping NFC cards.
-It keeps working without internet and syncs to the cloud when the connection comes back.
+<br />
 
-[![Live Site](https://img.shields.io/badge/Live%20Site-inmarkme.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://inmarkme.vercel.app/)
+[![Live Site](https://img.shields.io/badge/LIVE%20SITE-inmarkme.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://inmarkme.vercel.app/)
+[![Patent Pending](https://img.shields.io/badge/PATENT-PENDING-C62828?style=for-the-badge&logo=googlepatents&logoColor=white)](#patent)
+[![Indus App Store](https://img.shields.io/badge/PUBLISHED-Indus%20App%20Store-1E88E5?style=for-the-badge&logo=googleplay&logoColor=white)](#)
+[![Platform](https://img.shields.io/badge/PLATFORM-Android%20%7C%20iOS-3DDC84?style=for-the-badge&logo=android&logoColor=white)](#get-started)
+
+![Commits](https://img.shields.io/github/commit-activity/t/GoyalKrish/markmeSupabase?style=flat-square&logo=github&label=commits&color=8A2BE2)
+![Last Commit](https://img.shields.io/github/last-commit/GoyalKrish/markmeSupabase?style=flat-square&logo=git&logoColor=white&color=00C853)
+![Repo Size](https://img.shields.io/github/repo-size/GoyalKrish/markmeSupabase?style=flat-square&logo=files&logoColor=white&color=FF6F00)
+![Issues](https://img.shields.io/github/issues/GoyalKrish/markmeSupabase?style=flat-square&logo=github&color=E91E63)
+![Status](https://img.shields.io/badge/status-in%20production-00E676?style=flat-square)
 
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=flat-square&logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-0175C2?style=flat-square&logo=dart&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
-![NFC](https://img.shields.io/badge/NFC-Enabled-orange?style=flat-square)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+![NFC](https://img.shields.io/badge/NFC-Powered-FF6F00?style=flat-square&logo=nfc&logoColor=white)
+![Offline First](https://img.shields.io/badge/Offline-First-6A1B9A?style=flat-square)
+
+<br />
+
+<a href="#features"><img src="https://img.shields.io/badge/Features-0D1117?style=for-the-badge" alt="Features" /></a>
+<a href="#patent"><img src="https://img.shields.io/badge/Patent-0D1117?style=for-the-badge" alt="Patent" /></a>
+<a href="#how-it-works"><img src="https://img.shields.io/badge/How%20it%20works-0D1117?style=for-the-badge" alt="How it works" /></a>
+<a href="#tech-stack"><img src="https://img.shields.io/badge/Tech%20stack-0D1117?style=for-the-badge" alt="Tech stack" /></a>
+<a href="#get-started"><img src="https://img.shields.io/badge/Get%20started-0D1117?style=for-the-badge" alt="Get started" /></a>
+<a href="#roadmap"><img src="https://img.shields.io/badge/Roadmap-0D1117?style=for-the-badge" alt="Roadmap" /></a>
+
+</div>
+
+<br />
+
+https://github.com/user-attachments/assets/72c830d3-b4bd-42c7-a330-d9b369b88f5d
+
+<br />
+
+<div align="center">
+
+![Attendees](https://img.shields.io/badge/Attendees-1%2C200%2B-00C853?style=for-the-badge)
+![Live Events](https://img.shields.io/badge/Live%20Events-4-2979FF?style=for-the-badge)
+![Time to mark](https://img.shields.io/badge/Time%20to%20mark-1%20tap-FF6D00?style=for-the-badge)
+![Mode](https://img.shields.io/badge/Mode-Offline%20first-AA00FF?style=for-the-badge)
+
+<a href="https://github.com/GoyalKrish/markmeSupabase"><img src="https://img.shields.io/badge/Star%20this%20repo-Support%20the%20project-FFD700?style=for-the-badge&logo=github&logoColor=black&labelColor=222222" alt="Star this repo" /></a>
 
 </div>
 
 ---
 
-## The problem
+## Why MarkMe
 
-Taking attendance by hand is slow. Paper sheets get lost, roll calls waste class time, and at big events
-long queues form at the entrance.
+Taking attendance by hand wastes time. Sheets get lost, roll calls eat into class, and event entrances turn into long queues.
 
-## The solution
+MarkMe replaces all of that with a single tap. Everyone carries an NFC card. The organizer taps it on their phone, the record is saved instantly, and the numbers show up live.
 
-MarkMe turns attendance into a single tap. Each person carries an NFC card. The organizer taps it on
-their phone, and the attendance is recorded straight away. Organizers can then see live numbers and
-reports instead of counting sheets.
+| The old way | With MarkMe |
+|---|---|
+| Paper sheets and roll calls | One tap on an NFC card |
+| Manual counting and typing into spreadsheets | Records saved automatically |
+| Stops working when the network drops | Works offline and syncs later |
+| Results come hours later | Live numbers and shareable reports |
 
 ---
 
 ## Features
 
-- **Tap to mark attendance:** read an NFC card or tag with the phone.
-- **Works offline:** attendance is saved on the phone first, then synced to the cloud when internet is available.
-- **Live tracking:** organizers see attendance as it happens.
-- **Reports:** view and share attendance data.
-- **Accounts and sign-in:** each organizer has their own login.
-- **Organized by folders and lobbies:** keep different classes or events separate.
-- **Tested for real:** used at 4 live events with 1,200+ attendees.
-- **Published:** available on the Indus App Store.
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <h3>⚡ Tap to mark</h3>
+      Read an NFC card or tag with the phone. Attendance is recorded straight away.
+    </td>
+    <td width="33%" valign="top">
+      <h3>📴 Offline first</h3>
+      Everything is saved on the phone first, then synced to the cloud when internet returns.
+    </td>
+    <td width="33%" valign="top">
+      <h3>📡 Live tracking</h3>
+      Organizers watch attendance build up in real time.
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <h3>📊 Reports</h3>
+      View and share attendance data after the event or class.
+    </td>
+    <td valign="top">
+      <h3>🔐 Secure accounts</h3>
+      Every organizer signs in with their own account.
+    </td>
+    <td valign="top">
+      <h3>🗂️ Folders and lobbies</h3>
+      Keep different classes and events neatly separated.
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <h3>🏟️ Proven in the field</h3>
+      Used at 4 live events with 1,200+ attendees.
+    </td>
+    <td valign="top">
+      <h3>📱 Published</h3>
+      Available on the Indus App Store.
+    </td>
+    <td valign="top">
+      <h3>🧬 Patent pending</h3>
+      The core technology has a filed patent application.
+    </td>
+  </tr>
+</table>
+
+---
+
+<a id="patent"></a>
+
+## Patent
+
+> [!IMPORTANT]
+> The NFC-based attendance technology behind MarkMe is the subject of a filed patent application.
+>
+> **Patent Application No. 202511016597** (Patent Pending)
+
+<!-- Say "Patented" only after the patent is officially granted. Until then, "Patent Pending" is the correct wording. -->
 
 ---
 
@@ -48,62 +137,47 @@ reports instead of counting sheets.
 
 ```mermaid
 flowchart LR
-    A[NFC card / tag] -->|tap| B[MarkMe app<br/>Flutter]
+    A[NFC card or tag] -->|tap| B[MarkMe app<br/>Flutter]
     B -->|saves first| C[(Local storage<br/>on the phone)]
-    C -->|syncs when online| D[Supabase<br/>Database + Auth + Realtime]
+    C -->|syncs when online| D[Supabase<br/>Database, Auth, Realtime]
     D --> E[Live view and reports]
 ```
 
 1. The organizer signs in and opens a folder or lobby.
 2. Attendees tap their NFC card on the phone.
-3. The app saves the record on the phone right away, so nothing is lost if the network is slow.
-4. When online, the record is synced to Supabase, and the live view and reports update.
+3. The record is saved on the phone right away, so nothing is lost on a weak network.
+4. When online, it syncs to Supabase and the live view and reports update.
 
 ---
 
 ## Tech stack
 
-| Area | What is used | Why |
+<div align="center">
+
+<img src="https://skillicons.dev/icons?i=flutter,dart,supabase,postgres,androidstudio,vscode,git,github,vercel&theme=dark" alt="Tech stack icons" />
+
+</div>
+
+<br />
+
+| Area | Technology | Purpose |
 |---|---|---|
 | App | **Flutter** (Dart 3) | One codebase for Android, iOS and more |
-| Backend and database | **Supabase** (`supabase_flutter`) | Hosted database, sign-in and live updates |
+| Backend | **Supabase** (`supabase_flutter`) | Database, sign-in and live updates |
 | NFC | `nfc_manager` | Reads NFC cards and tags |
 | Navigation | `go_router` | Moves between screens |
-| State management | `provider` | Keeps the app's data in sync across screens |
-| Local storage | `shared_preferences` | Stores data on the phone for offline use |
+| State | `provider` | Keeps data in sync across screens |
+| Offline storage | `shared_preferences` | Saves data on the phone |
 | Config | `flutter_dotenv` | Keeps settings in a `.env` file |
-| Sharing and files | `share_plus`, `file_picker`, `path_provider` | Share and pick files |
-| Device info | `device_info_plus`, `uuid` | Identify the device and create unique IDs |
-| Look and feel | `google_fonts`, `lottie`, `flutter_svg`, `flutter_native_splash` | Fonts, animations, icons and splash screen |
+| Files and sharing | `share_plus`, `file_picker`, `path_provider` | Share and pick files |
+| Device | `device_info_plus`, `uuid` | Device details and unique IDs |
+| UI polish | `google_fonts`, `lottie`, `flutter_svg`, `flutter_native_splash` | Fonts, animations, icons, splash screen |
 
 ---
 
-## Project structure
+## Get started
 
-```
-markmeSupabase/
-├── lib/         # The Flutter app code (screens, logic, services)
-├── Backend/     # Supabase backend files
-├── assets/      # Images and icons
-├── test/        # Automated tests
-├── android/     # Android project
-├── ios/         # iOS project
-├── web/         # Web build support
-├── windows/  linux/  macos/   # Desktop build support (generated by Flutter)
-└── pubspec.yaml # App settings and dependencies
-```
-
----
-
-## Getting started
-
-### What you need
-
-- [Flutter](https://docs.flutter.dev/get-started/install) (Dart 3 or newer)
-- An **Android phone with NFC** to test tapping (emulators cannot read NFC)
-- A free [Supabase](https://supabase.com) project
-
-### Steps
+**You need:** [Flutter](https://docs.flutter.dev/get-started/install) (Dart 3+), an **Android phone with NFC** (emulators cannot read NFC), and a free [Supabase](https://supabase.com) project.
 
 ```bash
 # 1. Get the code
@@ -113,31 +187,25 @@ cd markmeSupabase
 # 2. Install packages
 flutter pub get
 
-# 3. Add your settings (see below)
+# 3. Add your settings
 cp .env.example .env
 
 # 4. Run on a connected phone
 flutter run
 ```
 
-### Settings (`.env`)
-
-Create a `.env` file in the project root with your own Supabase details:
+Fill in `.env` with your own Supabase details:
 
 ```env
 SUPABASE_URL=your-project-url
 SUPABASE_ANON_KEY=your-public-anon-key
 ```
 
-> The app lists `.env` as one of its files, so the build will fail if the file is missing.
-> Only use the public **anon** key. Never put a `service_role` key in this file, because anything
-> inside the app can be extracted. Protect your data with Supabase Row Level Security instead.
+> [!WARNING]
+> The build needs this file to exist. Use only the public **anon** key, never a `service_role` key,
+> because anything inside an app can be extracted. Protect your data with Supabase Row Level Security.
 
-### Run the tests
-
-```bash
-flutter test
-```
+Run the tests with `flutter test`.
 
 ---
 
@@ -145,45 +213,59 @@ flutter test
 
 The `Backend/` folder holds the Supabase side of the project.
 
-<!-- TODO: add 3-5 lines here about what is inside Backend/, for example:
+<!-- TODO: add 3-5 lines about what is inside Backend/, for example:
      - database tables and how they connect (folders, lobbies, attendance records)
      - security rules (Row Level Security)
-     - any SQL or functions, and how to apply them to a new Supabase project -->
+     - SQL or functions, and how to apply them to a new Supabase project -->
 
 ---
 
-## Known gaps and roadmap
+<details>
+<summary><b>Project structure</b></summary>
 
-These are tracked openly in the [Issues](https://github.com/GoyalKrish/markmeSupabase/issues) tab:
+```
+markmeSupabase/
+├── lib/          # Flutter app code
+├── Backend/      # Supabase backend files
+├── assets/       # Images and icons
+├── test/         # Automated tests
+├── android/      # Android project
+├── ios/          # iOS project
+├── web/          # Web build support
+├── windows/  linux/  macos/   # Desktop support (generated by Flutter)
+└── pubspec.yaml  # App settings and dependencies
+```
+
+</details>
+
+<a id="roadmap"></a>
+
+## Roadmap
+
+Tracked openly in the [Issues](https://github.com/GoyalKrish/markmeSupabase/issues) tab:
 
 - [ ] Change password inside the app
 - [ ] Push notifications
 - [ ] In-app "new version available" notice
-- [ ] Automated release to the Indus App Store (it is manual today)
-- [ ] Better handling of the same account logged in on several devices
+- [ ] Automated release to the Indus App Store
+- [ ] Better handling of one account on several devices
 - [ ] Limit the length of folder and lobby names
-- [ ] Track which app versions people are using
+- [ ] Track which app versions people use
 
 ---
 
-## Live site
+<div align="center">
 
-Learn more about MarkMe at **[inmarkme.vercel.app](https://inmarkme.vercel.app/)**.
+### Built by Krish Goyal
 
----
+B.Tech Computer Science student at Sharda University.
+Backend-minded, systems-curious, and always shipping.
 
-## Author
+[![Portfolio](https://img.shields.io/badge/Portfolio-krishgoyal.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://krishgoyal.vercel.app)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-goyalkrish-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/goyalkrish)
+[![GitHub](https://img.shields.io/badge/GitHub-GoyalKrish-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/GoyalKrish)
+![Open to](https://img.shields.io/badge/Open%20to-internships%20%7C%20collabs%20%7C%20hard%20problems-00C853?style=for-the-badge)
 
-**Krish Goyal**, B.Tech Computer Science student at Sharda University.
-**Aditya Pandey**, B.Tech Computer Science student at Sharda University.
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f2027,50:203a43,100:2c5364&height=140&section=footer" alt="" width="100%" />
 
-[Portfolio](https://krishgoyal.vercel.app) · [LinkedIn](https://linkedin.com/in/goyalkrish) · [GitHub](https://github.com/GoyalKrish)
-
-<!-- Optional: add screenshots once you have them. Save images in docs/screenshots/ and uncomment.
-
-## Screenshots
-
-| Home | Tap to mark | Reports |
-|---|---|---|
-| ![Home](docs/screenshots/home.png) | ![Tap](docs/screenshots/tap.png) | ![Reports](docs/screenshots/reports.png) |
--->
+</div>
